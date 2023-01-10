@@ -1,0 +1,64 @@
+{
+    "window.titleBarStyle": "custom",
+    "editor.fontFamily": "'Monaco', 'Consolas', 'Source Code Pro', 'Droid Sans Mono', 'monospace'",
+    "editor.fontSize": 16,
+    "editor.formatOnPaste": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true,
+    "terminal.integrated.shell.windows": "cmd.exe",
+    "terminal.integrated.shell.linux": "bash",
+    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
+    "cmake.configureOnOpen": false,
+    "cmake.debugConfig": {
+        "name": "(gdb) Launch",
+        "type": "cppdbg",
+        "request": "launch",
+        "args": [],
+        "stopAtEntry": true,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": true,
+        "MIMode": "gdb",
+        "miDebuggerPath": "gdb",
+        "windows": {
+            "miDebuggerPath": "gdb.exe"
+        },
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ],
+    },
+    "latex-workshop.message.update.show": false,
+    "latex-workshop.view.pdf.viewer": "browser",
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "xelatex",
+            "tools": [
+                "xelatex"
+            ]
+        }
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "xelatex",
+            "command": "xelatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "%DOC%"
+            ]
+        }
+    ],
+    "gitlens.showWhatsNewAfterUpgrades": false,
+    "gitlens.menus": false,
+    "gitlens.codeLens.enabled": false,
+    "gitlens.statusBar.enabled": false,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "workbench.colorTheme": "Default Dark+"
+}
