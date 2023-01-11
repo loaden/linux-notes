@@ -79,6 +79,18 @@
   > # echo "LANG=zh_CN.UTF-8" > /etc/locale.conf
   > # pacman -S adobe-source-han-sans-cn-fonts adobe-source-han-serif-cn-fonts
 
+* 在 *GRUB* 之前安装 [Microcode](https://wiki.archlinux.org/title/Microcode)
+
+  > ```shell
+  > # pacman -S intel-ucode #for Intel processors
+  > # pacman -S amd-ucode #for AMD processors
+
+* [GRUB](https://wiki.archlinux.org/title/GRUB) 启动加载器
+
+  > ```shell
+  > # grub-install
+  > # grub-mkconfig -o /boot/grub/grub.cfg
+
 * 主机名称
   > `# echo <主机名> > /etc/hostname`
 
@@ -95,6 +107,7 @@
   > Server = https://mirrors.bfsu.edu.cn/archlinuxcn/$arch
 
 * 安装密钥
+
   > ```shell
   > # pacman -Syy
   > # pacman -S archlinuxcn-keyring
