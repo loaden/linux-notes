@@ -15,10 +15,10 @@
 * 无线网卡使用 [iwctl](https://wiki.archlinux.org/title/Iwctl) 连接
 
   > ```shell
-  > [iwd]# device list
-  > [iwd]# station device scan
-  > [iwd]# station device get-networks
-  > [iwd]# station device connect SSID
+  > [iwd]# device list #例如输出 wlan0
+  > [iwd]# station wlan0 scan
+  > [iwd]# station wlan0 get-networks
+  > [iwd]# station wlan0 connect SSID
   > [iwd]# known-networks list
 
 ### 3. 检查时间
@@ -74,7 +74,7 @@
 * 中文语言和字体
 
   > ```shell
-  > # sed -i 's/#zh_CN.GBK/zh_CN.GBK/g' /etc/locale.gen
+  > # sed -i 's/#zh_CN.UTF-8/zh_CN.UTF-8/g' /etc/locale.gen
   > # locale-gen
   > # echo "LANG=zh_CN.UTF-8" > /etc/locale.conf
   > # pacman -S adobe-source-han-sans-cn-fonts adobe-source-han-serif-cn-fonts
