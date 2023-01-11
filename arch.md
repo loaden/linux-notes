@@ -38,7 +38,7 @@
   > # mount --mkdir /dev/sda1 /mnt/boot/efi
 
 * 建议家目录单独分区，不建议使用 *swap* 分区
-* 推荐使用 *btrfs* 文件系统
+* 推荐使用 *[btrfs](https://wiki.archlinux.org/title/Btrfs)* 文件系统
 
 ### 5. 优选国内源
 
@@ -94,6 +94,9 @@
 * 主机名称
   > `# echo <主机名> > /etc/hostname`
 
+* 实用工具 *[可选]*
+  > `# pacman -S fakeroot patch ed git ripgrep`
+
 ## 二、Arch 技巧总结
 
 ### 1. 启用archlinuxcn二进制源
@@ -119,7 +122,7 @@
 
 * 安装 ibus-rime
   > `# pacman -S ibus-rime`
-* 替换优化配置
+* 简体中文词库与配置
   > <https://github.com/loaden/rime>
 * 设置 > 键盘 > 输入源，添加汉语“*中文(Rime)*”
 * 设置环境变量，重启生效
@@ -161,6 +164,7 @@
   > $ yay dingtalk #钉钉
   > $ yay microsoft-edge #Edge浏览器
   > $ yay anydesk #AnyDesk
+  > $ yay wps-office-cn #WPS
 
 * 查询软件包信息 `yay -Ps`
 * 卸载不需要的依赖包 `yay -Yc`
