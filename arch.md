@@ -32,10 +32,10 @@
 * 挂载示例
 
   > ```shell
-  > # mkfs.fat -F32 /dev/sda1
-  > # mkfs.ext4 /dev/sda2
-  > # mount /dev/sda2 /mnt
-  > # mount --mkdir /dev/sda1 /mnt/boot/efi
+  > # mkfs.fat -F32 /dev/nvme0n1p1
+  > # mkfs.btrfs /dev/nvme0n1p2
+  > # mount /dev/nvme0n1p2 /mnt
+  > # mount --mkdir /dev/nvme0n1p1 /mnt/boot/efi
 
 * 建议家目录单独分区，不建议使用 *swap* 分区
 * 推荐使用 *[btrfs](https://wiki.archlinux.org/title/Btrfs)* 文件系统
