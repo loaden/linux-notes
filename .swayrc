@@ -1,0 +1,24 @@
+if test -z "${XDG_RUNTIME_DIR}"; then
+    export XDG_RUNTIME_DIR=/tmp/${UID}-runtime-dir
+    if ! test -d "${XDG_RUNTIME_DIR}"; then
+        mkdir "${XDG_RUNTIME_DIR}"
+        chmod 0700 "${XDG_RUNTIME_DIR}"
+    fi
+fi
+
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=sway
+export MOZ_DBUS_REMOTE=1
+export GTK_USE_PORTAL=0
+
+if test -z "$DBUS_SESSION_BUS_ADDRESS"; then
+    eval `dbus-launch --sh-syntax`
+    echo "D-Bus per-session daemon address is:"
+    echo "$DBUS_SESSION_BUS_ADDRESS"
+fi
+
+# Update systemd and D-Bus envs
+dbus-update-activation-environment --systemd --all
+
+# Sway
+[ -z $DISPLAY ] && [ "$(tty)" = "/dev/tty1" ] && exec sway

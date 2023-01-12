@@ -1,0 +1,7 @@
+# Config for mako
+
+default-timeout=3000
+on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+
+[urgency=high]
+ignore-timeout=1

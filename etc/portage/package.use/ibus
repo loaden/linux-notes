@@ -1,0 +1,1 @@
+app-i18n/ibus -gtk -gtk2 -nls -python -unicode -emoji

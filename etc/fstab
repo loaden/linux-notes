@@ -1,0 +1,6 @@
+# <file system>  <mount point>  <type>  <options>      <dump>  <pass>
+LABEL=EFI        /boot/efi      vfat    umask=0077     0       0
+LABEL=Btrfs      /              btrfs   noatime,subvol=@gentoo,compress=zstd:1,discard=async,ssd  0  0
+LABEL=Btrfs      /home          btrfs   noatime,subvol=@home,compress=zstd:1,discard=async,ssd    0  0
+LABEL=Btrfs      /swap          btrfs   subvol=@swap   0       0
+/swap/swapfile   none           swap    sw             0       0

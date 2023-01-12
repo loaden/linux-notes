@@ -1,3 +1,10 @@
 [user]
 	name = Yuchen Deng
 	email = loaden@gmail.com
+[core]
+	autocrlf = input
+	safecrlf = warn
+[gui]
+	spellingdictionary = en
+[pull]
+	rebase = false

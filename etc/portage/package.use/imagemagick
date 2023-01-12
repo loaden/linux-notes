@@ -1,0 +1,1 @@
+media-gfx/imagemagick -crypto -init -ipc -kernel -net -cxx -bzip2 -openmp -png -zlib
