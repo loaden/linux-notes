@@ -48,7 +48,7 @@
   > mount --make-slave /mnt/gentoo/run
   > mount -o subvol=@home /dev/nvme0n1p2 /mnt/gentoo/home
   > mount --mkdir /dev/nvme0n1p1 /mnt/gentoo/boot/efi
-  > cp /etc/resolv.conf /mnt/gentoo/etc/
+  > cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
   > chroot /mnt/gentoo /bin/bash
 
 * 执行脚本批量挂载并切换到目标系统
@@ -61,10 +61,9 @@
   > `# nano /etc/portage/make.conf`
   >
   > ```text
-  > COMMON_FLAGS="-march=native -O2 -pipe"
   > ACCEPT_LICENSE="*"
   > GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
-  > USE="wayland dbus policykit pipewire"
+  > USE="dbus policykit"
 
 * 时区
 
