@@ -48,7 +48,7 @@
 
 * 基础系统与桌面
   > pacstrap -K /mnt base linux linux-firmware grub efibootmgr sudo nano networkmanager gnome bash-completion
-* 自动挂载分区表
+* 分区挂载表
   > `# genfstab -L /mnt >> /mnt/etc/fstab`
 * 切换到目标系统
   > `# arch-chroot /mnt`
