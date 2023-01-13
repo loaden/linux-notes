@@ -55,9 +55,9 @@
 * 创建与配置用户
 
   > ```shell
+  > # echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
   > # useradd -m -G wheel <用户名>
   > # passwd <用户名>
-  > # echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
 
 * 启用服务
 

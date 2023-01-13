@@ -65,6 +65,12 @@
   > GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
   > USE="dbus policykit"
 
+* systemd 初始化
+
+  > ```shell
+  > # systemd-firstboot --prompt --setup-machine-id
+  > # systemctl preset-all --preset-mode=enable-only
+
 * 时区
 
   > ```shell
@@ -87,34 +93,35 @@
   > /dev/nvme0n1p2   /              btrfs   noatime,subvol=@gentoo,discard=async,ssd  0  0
   > /dev/nvme0n1p2   /home          btrfs   noatime,subvol=@home,discard=async,ssd    0  0
 
-
-* 主机名称
-  > `# echo <主机名> > /etc/hostname`
 * 弱密码
   > `# sed -i 's/everyone/none/' /etc/security/passwdqc.conf`
-* 启用基础的 systemd 单元
-  > `# systemctl preset-all --preset-mode=enable-only`
-* 更新环境变量
-  > `# env-update && source /etc/profile`
 
 ### 7. 基础系统安装
 
 * 更新软件数据库
   > `# emerge-webrsync`
+* 更新环境变量
+  > `# env-update && source /etc/profile`
 * 更新 `@world` 集合
   > `# emerge -avuDN @world`
 * 内核与硬件驱动
-  > `# emerge -av gentoo-kernel-bin linux-firmware`
+  > `# emerge -av linux-firmware gentoo-kernel-bin`
 * 常用工具
-  > `# emerge -av sudo gentoolkit bash-completion iwd ripgrep btrfs-progs`
+  > `# emerge -av sudo gentoolkit bash-completion ripgrep btrfs-progs`
+
+* 网络
+
+  > ```shell
+  > # emerge -av iwd
+  > # systemd enable iwd
 
 * 创建与配置用户
 
   > ```shell
-  > # useradd -m -G wheel <用户名>
-  > # passwd <用户名>
   > # mkdir /etc/sudoers.d
   > # echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
+  > # useradd -m -G wheel <用户名>
+  > # passwd <用户名>
 
 * 启动引导
 
@@ -122,3 +129,19 @@
   > # emerge -av grub efibootmgr
   > # grub-install
   > # grub-mkconfig -o /boot/grub/grub.cfg
+
+## 二、Gentoo 技巧总结
+
+### 1. 启用 gentoo-zh
+
+* 安装依赖
+  > `# emerge -av eselect-repository dev-vcs/git`
+* 启用
+  > `# eselect repository enable gentoo-zh`
+* 同步
+  > `# emerge --sync`
+* 手动同步
+
+  > ```shell
+  > # cd /var/db/repos/gentoo-zh
+  > # git pull
