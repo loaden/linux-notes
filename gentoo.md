@@ -108,10 +108,12 @@
   > `# emerge -av linux-firmware gentoo-kernel-bin`
 * 常用工具
   > `# emerge -av sudo gentoolkit bash-completion ripgrep btrfs-progs`
-
+* 中文字体
+  > `# emerge -av source-han-sans source-code-pro`
 * 网络
 
   > ```shell
+  > # euse -p net-wireless/iwd standalone wired
   > # emerge -av iwd
   > # systemd enable iwd
 
