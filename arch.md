@@ -15,11 +15,11 @@
 * 无线网卡使用 [iwctl](https://wiki.archlinux.org/title/Iwctl) 连接
 
   > ```shell
-  > [iwd]# device list #例如输出 wlan0
+  > [iwd]# station list #例如输出 wlan0
   > [iwd]# station wlan0 scan
   > [iwd]# station wlan0 get-networks
   > [iwd]# station wlan0 connect SSID
-  > [iwd]# known-networks list
+  > [iwd]# station wlan0 show
 
 ### 3. 检查时间
 
