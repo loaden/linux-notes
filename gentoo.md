@@ -33,7 +33,7 @@
 * tty2 查阅文档，使用翻页和方向键导航，支持鼠标交互
   > `# links wiki.gentoo.org/wiki/Handbook`
 
-### 5. 编写挂载脚本
+### 5. 编写[挂载脚本](.bin/chroot.sh)
 
 * 安装与维护多次用到，请酌情修改 `# nano /mnt/gentoo/chroot.sh`
 
@@ -56,7 +56,7 @@
 
 ### 6. 核心配置
 
-* 主配置
+* [主配置](etc/portage/make.conf)
 
   > `# nano /etc/portage/make.conf`
   >
@@ -102,7 +102,7 @@
   > `# emerge-webrsync`
 * 更新环境变量
   > `# env-update && source /etc/profile`
-* 更新 `@world` 集合
+* 更新 [`@world` 集合](var/lib/portage/world)
   > `# emerge -avuDN @world`
 * 内核与硬件驱动
   > `# emerge -av linux-firmware gentoo-kernel-bin`
