@@ -145,3 +145,13 @@
   > ```shell
   > # cd /var/db/repos/gentoo-zh
   > # git pull
+
+### 2. 创建用户目录
+
+> ```shell
+> # emerge -av1 xdg-user-dirs
+> # xdg-user-dirs-update --force
+
+### 3. 清理未完成的安装任务
+
+> `# emaint --fix cleanresume`
