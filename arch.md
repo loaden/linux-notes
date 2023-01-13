@@ -183,7 +183,7 @@
   > `# pacman -S wmctrl xdotool`
 * 启动
   > `$ libinput-gestures-setup autostart start`
-* [自定义配置](.config/libinput-gestures.conf)
+* 自定义[配置](.config/libinput-gestures.conf)
 
   > ```text
   > gesture swipe left _internal ws_up
