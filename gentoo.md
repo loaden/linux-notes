@@ -156,6 +156,21 @@
   > `# emerge -av mpv`
 * 看图
   > `# emerge -av imv`
+* 登录管理器
+
+  > ```shell
+  > # emerge -av --autounmask tuigreet
+  > # systemctl enable greetd
+
+  * 修改配置
+    > `# nano /etc/greetd/config.toml`
+    > ```text
+    > command = "tuigreet --cmd sway"
+
+  * 如果登录界面被日志覆盖
+    > `# nano /etc/default/grub`
+    > ```text
+    > GRUB_CMDLINE_LINUX="quiet"
 
 ## 二、Gentoo 技巧总结
 
