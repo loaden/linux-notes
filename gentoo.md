@@ -132,6 +132,30 @@
   > # grub-install
   > # grub-mkconfig -o /boot/grub/grub.cfg
 
+### 8. 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
+
+* [桌面](.config/sway/)
+  > `# pacman -S sway`
+* [任务栏](.config/waybar/)
+
+  > ```shell
+  > # euse -p gui-apps/waybar network pulseaudio tray wifi
+  > # dispatch-conf
+  > # pacman -S --autounmask waybar
+
+* 启动器
+  > `# pacman -S --autounmask wofi`
+* [终端](.config/foot/foot.ini)
+  > `# pacman -S foot`
+* [通知](.config/mako/config)
+  > `# pacman -S gui-apps/mako`
+* 文件管理器
+  > `# pacman -S thunar`
+* 视频播放器
+  > `# pacman -S mpv`
+* 看图
+  > `# pacman -S imv`
+
 ## 二、Gentoo 技巧总结
 
 ### 1. 启用 gentoo-zh
