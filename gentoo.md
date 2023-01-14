@@ -135,26 +135,27 @@
 ### 8. 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
 * [桌面](.config/sway/)
-  > `# pacman -S sway`
+  > `# emerge -av sway`
 * [任务栏](.config/waybar/)
 
   > ```shell
   > # euse -p gui-apps/waybar network pulseaudio tray wifi
   > # dispatch-conf
-  > # pacman -S --autounmask waybar
+  > # emerge -av --autounmask waybar
+  > # emerge -av --autounmask =fontawesome-6.1.1
 
 * 启动器
-  > `# pacman -S --autounmask wofi`
+  > `# emerge -av --autounmask wofi`
 * [终端](.config/foot/foot.ini)
-  > `# pacman -S foot`
+  > `# emerge -av foot`
 * [通知](.config/mako/config)
-  > `# pacman -S gui-apps/mako`
+  > `# emerge -av gui-apps/mako`
 * 文件管理器
-  > `# pacman -S thunar`
+  > `# emerge -av thunar`
 * 视频播放器
-  > `# pacman -S mpv`
+  > `# emerge -av mpv`
 * 看图
-  > `# pacman -S imv`
+  > `# emerge -av imv`
 
 ## 二、Gentoo 技巧总结
 
