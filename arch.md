@@ -170,3 +170,25 @@
 * 卸载不需要的依赖包 `yay -Yc`
 * `yay` 缓存路径
   > ~/.cache/yay
+
+### 6. 触控手势
+
+* 项目地址
+  > <https://github.com/bulletmark/libinput-gestures>
+* 从 archlinuxcn 源安装二进制包
+  > `# pacman -S libinput-gestures`
+* 将用户加入 input 组，重启生效
+  > `# gpasswd -a <用户名> input`
+* 安装扩展功能依赖
+  > `# pacman -S wmctrl xdotool`
+* 启动
+  > `$ libinput-gestures-setup autostart start`
+* 自定义[配置](.config/libinput-gestures.conf)
+
+  > ```text
+  > gesture swipe left _internal ws_up
+  > gesture swipe right _internal ws_down
+  > gesture swipe up xdotool key super+s
+  > gesture swipe down xdotool key super+s
+  > gesture pinch in xdotool key ctrl+minus
+  > gesture pinch out xdotool key ctrl+plus
