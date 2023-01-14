@@ -93,7 +93,7 @@ for_window [class="Wine"] floating enable
 for_window [app_id="system-config-printer"] floating enable, resize set width 35 ppt height 30 ppt
 
 # 随机壁纸
-output * bg $(find ~/.config/wallpapers -type f | shuf -n1) fill
+output * bg $(find ~/.config/wallpapers/ -type f | shuf -n1) fill
 
 ### Output configuration
 #
