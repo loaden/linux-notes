@@ -150,12 +150,6 @@
   > `# emerge -av foot`
 * [通知](.config/mako/config)
   > `# emerge -av gui-apps/mako`
-* 文件管理器
-  > `# emerge -av thunar`
-* 视频播放器
-  > `# emerge -av mpv`
-* 看图
-  > `# emerge -av imv`
 * 登录管理器
 
   > ```shell
@@ -171,6 +165,17 @@
     > `# nano /etc/default/grub`
     > ```text
     > GRUB_CMDLINE_LINUX="quiet"
+
+* 文件管理器
+  > `# emerge -av thunar`
+* 视频播放器
+  > `# emerge -av mpv`
+* 看图
+  > `# emerge -av imv`
+* 浏览器
+  > `# emerge -av microsoft-edge`
+* 代码
+  > `# emerge -av --autounmask vscode`
 
 ## 二、Gentoo 技巧总结
 
