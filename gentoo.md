@@ -208,6 +208,9 @@
   > # cd /var/db/repos/gentoo-zh
   > # git pull
 
+* 因为墙
+  > `git clone --depth 1 https://github.com/gentoo-mirror/gentoo-zh.git /var/db/repos/gentoo-zh`
+
 ### 2. 创建用户目录
 
 > ```shell
@@ -224,3 +227,13 @@
 > $ systemctl --user enable pulseaudio
 > $ systemctl --user start pulseaudio
 > $ systemctl --user status pulseaudio
+
+### 5. 普通用户授权
+
+  > `# nano /etc/polkit-1/rules.d/10-admin.rules`
+  > ```text
+  > polkit.addAdminRule(function(action, subject) {
+  >   return ["unix-group:wheel"];
+  > });
+  > ```
+  > `# systemctl restart polkit.service`
