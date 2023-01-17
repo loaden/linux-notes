@@ -63,7 +63,6 @@
   > ```text
   > ACCEPT_LICENSE="*"
   > GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
-  > USE="dbus policykit"
 
 * systemd 初始化
 
@@ -243,3 +242,15 @@
   > });
   > ```
   > `# systemctl restart polkit.service`
+
+### 6. [字体配置](.config/fontconfig/fonts.conf)
+
+* 用户字体配置文件
+  > ~/.config/fontconfig/fonts.conf
+
+* 查看字体配置信息
+
+  > ```shell
+  > $ fc-match --sort monospace:lang=zh
+  > $ fc-match --sort sans:lang=zh
+  > $ fc-match --sort serif:lang=zh

@@ -3,16 +3,23 @@
 # QQ群：19346666、111601117
 
 # 刷新字体缓存
-fc-cache -rv
+fc-cache -rf
 
 # 查询字体列表
 fc-list :lang=zh-cn
 
 # 查询字体匹配
-fc-match --sort monospace:lang=zh-cn
-fc-match --sort sans:lang=zh-cn
-fc-match --sort serif:lang=zh-cn
+echo
+echo fc-match --sort monospace:lang=zh
+fc-match --sort monospace:lang=zh
+echo
+echo fc-match --sort sans:lang=zh
+fc-match --sort sans:lang=zh
+echo
+echo fc-match --sort serif:lang=zh
+fc-match --sort serif:lang=zh
 
 # 查询字体名
 fc-match -v SourceCodePro-Regular.otf | grep name
 fc-match -v SourceHanSerifCN | grep name
+fc-match -v LiberationSerif | grep name
