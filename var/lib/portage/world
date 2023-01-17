@@ -13,6 +13,7 @@ gui-apps/foot
 gui-apps/grim
 gui-apps/mako
 gui-apps/slurp
+gui-apps/swappy
 gui-apps/tuigreet
 gui-apps/waybar
 gui-apps/wl-clipboard
