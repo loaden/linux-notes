@@ -173,6 +173,15 @@
     > ```text
     > GRUB_CMDLINE_LINUX="quiet"
 
+* [触控板](.config/sway/config)
+
+    > ```text
+    > input "1267:23:Elan_Touchpad" {
+    >   tap enabled
+    >   natural_scroll enabled
+    >   middle_emulation enabled
+    > }
+
 * 文件管理器
   > `# emerge -av thunar`
 * 视频播放器
