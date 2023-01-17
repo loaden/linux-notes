@@ -107,7 +107,7 @@
 * 内核与硬件驱动
   > `# emerge -av linux-firmware gentoo-kernel-bin`
 * 常用工具
-  > `# emerge -av sudo gentoolkit bash-completion ripgrep btrfs-progs`
+  > `# emerge -av sudo gentoolkit pfl bash-completion`
 * 中文字体
   > `# emerge -av source-han-sans source-code-pro`
 * 网络

@@ -95,7 +95,7 @@
   > `# echo <主机名> > /etc/hostname`
 
 * 实用工具 *[可选]*
-  > `# pacman -S fakeroot patch ed git ripgrep`
+  > `# pacman -S fakeroot patch ed git`
 
 ## 二、Arch 技巧总结
 
