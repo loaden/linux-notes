@@ -33,6 +33,7 @@ net-im/dingtalk
 net-im/tencent-qq
 net-misc/aria2
 net-wireless/iwd
+sci-calculators/galculator
 sys-apps/ripgrep
 sys-boot/efibootmgr
 sys-boot/grub
