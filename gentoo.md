@@ -117,6 +117,13 @@
   > # emerge -av iwd
   > # systemd enable iwd
 
+* 电源管理
+
+  > ```shell
+  > # emerge -av acpid
+  > # systemctl enable acpid
+
+
 * 创建与配置用户
 
   > ```shell
@@ -136,7 +143,7 @@
 
 * [桌面](.config/sway/)
   > `# emerge -av sway`
-* [任务栏](.config/waybar/)
+* [顶栏](.config/waybar/)
 
   > ```shell
   > # euse -p gui-apps/waybar network pulseaudio tray wifi
