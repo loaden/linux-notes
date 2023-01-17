@@ -305,7 +305,8 @@ for_window [app_id="qt5ct"] floating enable, sticky enable
 for_window [title="DING"] floating enable
 
 # 截图
-bindsym Alt+Shift+a exec grim -g "$(slurp)" - | wl-copy && notify-send "截图到剪贴板"
+bindsym $mod+shift+g exec grim -g "$(slurp)" - | wl-copy && notify-send "截图到剪贴板"
+bindsym $mod+shift+s exec grim -g "$(slurp)" - | swappy -f - -o - | wl-copy && notify-send "截图到剪贴板"
 bindsym $mod+Print exec grim ~/$(date +'%Y-%m-%d_%H%M%S.png') \
     && wl-copy < ~/$(date +'%Y-%m-%d_%H%M%S.png') \
     && notify-send "截图" ~/$(date +'%Y-%m-%d_%H%M%S.png')
