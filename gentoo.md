@@ -123,7 +123,6 @@
   > # emerge -av acpid
   > # systemctl enable acpid
 
-
 * 创建与配置用户
 
   > ```shell
@@ -218,3 +217,10 @@
 ### 3. 清理未完成的安装任务
 
 > `# emaint --fix cleanresume`
+
+### 4. 启用 PulseAudio
+
+> ```shell
+> $ systemctl --user enable pulseaudio
+> $ systemctl --user start pulseaudio
+> $ systemctl --user status pulseaudio
