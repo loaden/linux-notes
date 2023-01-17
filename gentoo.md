@@ -188,6 +188,8 @@
 
 * 文件管理器
   > `# emerge -av thunar`
+* 文本编辑器
+  > `# emerge -av gnome-text-editor`
 * 视频播放器
   > `# emerge -av mpv`
 * 看图
