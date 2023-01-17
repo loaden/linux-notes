@@ -12,15 +12,16 @@ dev-vcs/git
 gui-apps/foot
 gui-apps/grim
 gui-apps/mako
+gui-apps/slurp
 gui-apps/tuigreet
 gui-apps/waybar
+gui-apps/wl-clipboard
 gui-apps/wofi
 gui-libs/greetd
 gui-wm/sway
 media-fonts/fontawesome
 media-fonts/source-code-pro
 media-fonts/source-han-sans
-media-gfx/flameshot
 media-gfx/imv
 media-sound/audacious
 media-sound/pavucontrol

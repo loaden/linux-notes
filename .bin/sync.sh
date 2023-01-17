@@ -17,10 +17,6 @@ rm -f etc/portage/package.use/zz-autounmask
 [ -d /etc/portage/env ] && cp -r /etc/portage/env/ etc/portage/
 [ -f /etc/portage/package.env ] && cp /etc/portage/package.env etc/portage/
 
-# kernel config
-[ -d /usr/src/linux/ ] && cp /usr/src/linux/.config usr/src/linux/
-[ -d /usr/src/linux/ ] && find /usr/src/linux/ -maxdepth 1 -name ".config.*.*" -exec cp {} usr/src/linux/ \;
-
 # environment
 cp /etc/environment etc/
 

@@ -79,6 +79,7 @@ exec swayidle -w \
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
 input "1267:23:Elan_Touchpad" {
+    dwt enabled
     tap enabled
     natural_scroll enabled
     middle_emulation enabled
@@ -302,5 +303,15 @@ for_window [title="文件操作进度"] floating enable, resize set width 30 ppt
 for_window [title="创建新归档文件"] floating enable
 for_window [app_id="qt5ct"] floating enable, sticky enable
 for_window [title="DING"] floating enable
+
+# 截图
+bindsym Alt+Shift+a exec grim -g "$(slurp)" - | wl-copy && notify-send "截图到剪贴板"
+bindsym $mod+Print exec grim ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && wl-copy < ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && notify-send "截图" ~/$(date +'%Y-%m-%d_%H%M%S.png')
+bindsym $mod+shift+p exec grim ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && wl-copy < ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && notify-send "截图" ~/$(date +'%Y-%m-%d_%H%M%S.png')
+
 
 include /etc/sway/config.d/*
