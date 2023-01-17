@@ -192,11 +192,13 @@
   > `# emerge -av gnome-text-editor`
 * 视频播放器
   > `# emerge -av mpv`
+* 音乐播放器
+  > `# emerge -av audacious`
 * 看图
   > `# emerge -av imv`
 * 浏览器
   > `# emerge -av microsoft-edge`
-* 代码
+* 编码
   > `# emerge -av --autounmask vscode`
 
 ## 二、Gentoo 技巧总结
