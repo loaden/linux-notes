@@ -181,6 +181,12 @@
     >   middle_emulation enabled
     > }
 
+* 环境变量
+  > `# nano /etc/environment`
+  > ```text
+  > XDG_CURRENT_DESKTOP=sway
+  > XDG_SESSION_DESKTOP=sway
+
 * 文件管理器
   > `# emerge -av thunar`
 * 视频播放器
