@@ -204,19 +204,20 @@
 
 ## 二、Gentoo 技巧总结
 
-### 1. 启用 gentoo-zh
+### 1. 启用 gentoo-zh guru
 
 * 安装依赖
   > `# emerge -av eselect-repository dev-vcs/git`
 * 启用
-  > `# eselect repository enable gentoo-zh`
+  > `# eselect repository enable gentoo-zh guru`
 * 同步
-  > `# emerge --sync gentoo-zh`
-* 手动同步
+  > `# emerge --sync gentoo-zh guru`
+* 手动同步 gentoo-zh
 
   > ```shell
   > # cd /var/db/repos/gentoo-zh
   > # git pull
+  > # emerge --update
 
 ### 2. 创建用户目录
 
@@ -251,7 +252,10 @@
   > ~/.config/fontconfig/fonts.conf
 
 * 字体配置补充字体
-  > `# emerge -av source-code-pro source-serif`
+  
+  > ```shell
+  > # emerge -av ubuntu-font-family source-code-pro
+  > # emerge -av --autounmask source-han-serif
 
 * 查看字体匹配顺序
 
