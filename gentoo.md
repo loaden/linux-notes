@@ -211,15 +211,12 @@
 * 启用
   > `# eselect repository enable gentoo-zh`
 * 同步
-  > `# emerge --sync`
+  > `# emerge --sync gentoo-zh`
 * 手动同步
 
   > ```shell
   > # cd /var/db/repos/gentoo-zh
   > # git pull
-
-* 因为墙
-  > `git clone --depth 1 https://github.com/gentoo-mirror/gentoo-zh.git /var/db/repos/gentoo-zh`
 
 ### 2. 创建用户目录
 
