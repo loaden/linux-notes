@@ -5,6 +5,7 @@ app-editors/vscode
 app-eselect/eselect-repository
 app-i18n/ibus
 app-i18n/ibus-rime
+app-misc/brightnessctl
 app-portage/gentoolkit
 app-portage/pfl
 app-shells/bash-completion
