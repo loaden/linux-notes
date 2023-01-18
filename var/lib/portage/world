@@ -24,7 +24,8 @@ gui-wm/sway
 media-fonts/fontawesome
 media-fonts/source-code-pro
 media-fonts/source-han-sans
-media-fonts/source-serif
+media-fonts/source-han-serif
+media-fonts/ubuntu-font-family
 media-gfx/imv
 media-sound/audacious
 media-sound/pavucontrol
