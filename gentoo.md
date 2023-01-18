@@ -283,14 +283,24 @@
   > # make help
   > # make localyesconfig
 
-* 开启 Gentoo 特有配置
+* 修改配置
 
   > ```shell
   > # cp .config .config.bak
   > # scripts/config -d CONFIG_GENTOO_LINUX_INIT_SCRIPT
   > # scripts/config -e CONFIG_GENTOO_LINUX_INIT_SYSTEMD
+  > # scripts/config --set-str CONFIG_LOCALVERSION ""
   > # scripts/config  --refresh
   > # scripts/diffconfig .config.bak .config
 
+  * 这里只是修改了 Gentoo 相关的基本配置，请根据自己的硬件定制配置。
+  * 建议通过[脚本文件](.bin/kernel.sh)来逐步完善配置。
+
 * 编译
   > `# make -j$(nproc) && make modules_install && make install`
+* 生成 initrd
+  > `# dracut /boot/initramfs-5.15.88-gentoo.img --force --hostonly --modules "rootfs-block base btrfs" --early-microcode --fstab --zstd`
+* 启动
+  > `# grub-mkconfig -o /boot/grub/grub.cfg`
+* [定制](.bin/kernel.sh)
+  > .bin/kernel.sh

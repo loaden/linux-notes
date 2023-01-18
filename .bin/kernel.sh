@@ -641,9 +641,9 @@ esac
 if [ "$COMPILE_KERNEL" = "1" ]; then
     make -j$(nproc) && make modules_install && make install
 
-    dracut --force /boot/initramfs-$(grep 'Kernel Configuration' /usr/src/linux/.config | cut -d ' ' -f 3).img \
-        --hostonly --show-modules --modules "rootfs-block base btrfs" \
-        -early-microcode --fstab --zstd
+    dracut /boot/initramfs-$(grep 'Kernel Configuration' /usr/src/linux/.config | cut -d ' ' -f 3).img \
+        --force --hostonly --modules "rootfs-block base btrfs" \
+        --early-microcode --fstab --zstd
 
     grub-mkconfig -o /boot/grub/grub.cfg
     ls -lh /boot/vmlinuz*
