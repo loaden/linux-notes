@@ -295,7 +295,7 @@
 * [定制](.bin/kernel.sh)
   > .bin/kernel.sh
 
-## Gentoo 技巧总结
+## 四、Gentoo 技巧总结
 
 ### 1. 创建用户目录
 
