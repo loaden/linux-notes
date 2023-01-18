@@ -15,31 +15,27 @@ if [ "$0" != "/etc/$(basename $0)" ]; then
     exit 0
 fi
 
+# 进入内核源码目录
 cd /usr/src/linux
 
-# 启用Clang编译内核
+# 启用clang编译内核
 BUILD_WITH_CLANG=0
 
 # 初始本地配置
 read -p "是否生成本地配置？[y/N/old]" choice
 case $choice in
-YES | yes | Y | y) mv .config .config.bak ; make localmodconfig && sleep 1 ;;
+YES | yes | Y | y) mv .config .config.bak ; make localyesconfig && sleep 1 ;;
 OLD | old | O | o) make oldconfig && sleep 1 ;;
 N | n | '') true ;;
 *) echo 错误选择，程序意外退出！ && exit ;;
 esac
 
-# 启用Clang薄LTO优化
+# 启用clang薄LTO优化
 if [ "$BUILD_WITH_CLANG" = "1" ]; then
     export LLVM=1
     scripts/config -e CONFIG_LTO_CLANG_THIN
 else
     scripts/config --set-val CONFIG_CLANG_VERSION "0"
-fi
-
-# 自定义配置
-if [[ -z "$(grep 'Custom Configuration' $PWD/.config)" ]]; then
-    echo -e "\n# Custom Configuration" >> $PWD/.config
 fi
 
 # 启用
@@ -117,7 +113,6 @@ set_disable \
     CONFIG_EXPERT \
     CONFIG_HYPERVISOR_GUEST \
     CONFIG_IKCONFIG_PROC \
-    CONFIG_MICROCODE \
     CONFIG_MODULE_FORCE_LOAD \
     CONFIG_PRINTK_INDEX \
     CONFIG_PROFILING \
@@ -127,8 +122,6 @@ set_disable \
 
 set_enable \
     CONFIG_CHECKPOINT_RESTORE \
-    CONFIG_COMPAT_32 \
-    CONFIG_IA32_EMULATION \
     CONFIG_IKCONFIG \
 
 set_module \
@@ -632,8 +625,8 @@ scripts/config  --refresh
 make menuconfig
 
 # 对比选项
-echo scripts/diffconfig .config.bak .config
-scripts/diffconfig .config.bak .config
+echo scripts/diffconfig .config.old .config
+scripts/diffconfig .config.old .config
 
 # 输出配置文件大小
 ls -lh .config
@@ -647,11 +640,11 @@ esac
 
 if [ "$COMPILE_KERNEL" = "1" ]; then
     make -j$(nproc) && make modules_install && make install
-    find /boot/ -maxdepth 1 -mmin -1 -type f -name vmlinuz-* -exec cp -fv {} /boot/efi/EFI/gentoo/vmlinuz \; -print
-    rm -f /etc/dracut.conf.d/*
+
     dracut --force /boot/initramfs-$(grep 'Kernel Configuration' /usr/src/linux/.config | cut -d ' ' -f 3).img \
         --hostonly --show-modules --modules "rootfs-block base btrfs" \
         -early-microcode --fstab --zstd
+
     grub-mkconfig -o /boot/grub/grub.cfg
     ls -lh /boot/vmlinuz*
     ls -lh /boot/initramfs*

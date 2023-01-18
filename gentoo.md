@@ -252,7 +252,7 @@
   > ~/.config/fontconfig/fonts.conf
 
 * 字体配置补充字体
-  
+
   > ```shell
   > # emerge -av ubuntu-font-family source-code-pro
   > # emerge -av --autounmask source-han-serif
@@ -263,3 +263,34 @@
   > $ fc-match --sort monospace:lang=zh
   > $ fc-match --sort sans:lang=zh
   > $ fc-match --sort serif:lang=zh
+
+## 三、Gentoo 定制内核
+
+* 下载与选择源码
+
+  > ```shell
+  > # emerge -av gentoo-sources
+  > # eselect kernel list
+  > # eselect kernel set 1
+  > # ls -l /usr/src
+
+* 从官方二进制内核生成配置
+
+  > ```shell
+  > # uname -r
+  > 5.15.88-gentoo-dist
+  > # cd /usr/src/linux
+  > # make help
+  > # make localyesconfig
+
+* 开启 Gentoo 特有配置
+
+  > ```shell
+  > # cp .config .config.bak
+  > # scripts/config -d CONFIG_GENTOO_LINUX_INIT_SCRIPT
+  > # scripts/config -e CONFIG_GENTOO_LINUX_INIT_SYSTEMD
+  > # scripts/config  --refresh
+  > # scripts/diffconfig .config.bak .config
+
+* 编译
+  > `# make -j$(nproc) && make modules_install && make install`
