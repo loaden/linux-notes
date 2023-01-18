@@ -23,6 +23,7 @@ gui-wm/sway
 media-fonts/fontawesome
 media-fonts/source-code-pro
 media-fonts/source-han-sans
+media-fonts/source-serif
 media-gfx/imv
 media-sound/audacious
 media-sound/pavucontrol
@@ -43,6 +44,7 @@ sys-fs/btrfs-progs
 sys-kernel/gentoo-kernel-bin
 sys-kernel/linux-firmware
 sys-power/acpid
+sys-power/thermald
 www-client/microsoft-edge
 x11-apps/xlsclients
 xfce-base/thunar
