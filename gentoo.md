@@ -108,7 +108,7 @@
 * 常用工具
   > `# emerge -av sudo gentoolkit pfl bash-completion`
 * 中文字体
-  > `# emerge -av source-han-sans source-code-pro`
+  > `# emerge -av source-han-sans`
 * 网络
 
   > ```shell
@@ -175,6 +175,7 @@
 
     > ```text
     > input "1267:23:Elan_Touchpad" {
+    >   dwt enabled
     >   tap enabled
     >   natural_scroll enabled
     >   middle_emulation enabled
@@ -247,12 +248,15 @@
   > ```
   > `# systemctl restart polkit.service`
 
-### 6. [字体配置](.config/fontconfig/fonts.conf)
+### 6. 字体配置
 
-* 用户字体配置文件
+* [用户字体配置文件](.config/fontconfig/fonts.conf)
   > ~/.config/fontconfig/fonts.conf
 
-* 查看字体配置信息
+* 字体配置补充字体
+  > `# emerge -av source-code-pro source-serif`
+
+* 查看字体匹配顺序
 
   > ```shell
   > $ fc-match --sort monospace:lang=zh
