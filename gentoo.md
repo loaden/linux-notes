@@ -202,7 +202,7 @@
 * 编码
   > `# emerge -av --autounmask vscode`
 
-## 二、Gentoo 技巧总结
+## 二、Gentoo 后期配置
 
 ### 1. 启用 gentoo-zh guru
 
@@ -219,24 +219,14 @@
   > # git pull
   > # emerge --update
 
-### 2. 创建用户目录
-
-> ```shell
-> # emerge -av1 xdg-user-dirs
-> # xdg-user-dirs-update --force
-
-### 3. 清理未完成的安装任务
-
-> `# emaint --fix cleanresume`
-
-### 4. 启用 PulseAudio
+### 2. 启用 PulseAudio
 
 > ```shell
 > $ systemctl --user enable pulseaudio
 > $ systemctl --user start pulseaudio
 > $ systemctl --user status pulseaudio
 
-### 5. 普通用户授权
+### 3. 普通用户授权
 
   > `# nano /etc/polkit-1/rules.d/10-admin.rules`
   > ```text
@@ -246,7 +236,7 @@
   > ```
   > `# systemctl restart polkit.service`
 
-### 6. 字体配置
+### 4. 字体配置
 
 * [用户字体配置文件](.config/fontconfig/fonts.conf)
   > ~/.config/fontconfig/fonts.conf
@@ -304,3 +294,25 @@
   > `# grub-mkconfig -o /boot/grub/grub.cfg`
 * [定制](.bin/kernel.sh)
   > .bin/kernel.sh
+
+## Gentoo 技巧总结
+
+### 1. 创建用户目录
+
+> ```shell
+> # emerge -av1 xdg-user-dirs
+> # xdg-user-dirs-update --force
+
+### 2. 清理未完成的安装任务
+
+> `# emaint --fix cleanresume`
+
+### 3. 通过文件查找包
+
+> ```shell
+> # emerge -av1 pfl
+> # e-file pactl
+
+### 4. 恢复编译
+
+> `# emerge --resume`
