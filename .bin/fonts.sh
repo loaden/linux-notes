@@ -22,4 +22,4 @@ fc-match --sort serif:lang=zh
 # 查询字体名
 fc-match -v SourceCodePro-Regular.otf | grep name
 fc-match -v SourceHanSerifCN | grep name
-fc-match -v LiberationSerif | grep name
+fc-match -v "Source Serif 4" | grep name
