@@ -201,7 +201,7 @@
 
   > ```shell
   > # snapper create-config /
-  > # snapper set-config ALOW_GROUPS="wheel"
+  > # snapper set-config ALLOW_GROUPS="wheel"
   > # snapper list
 
 * 创建
