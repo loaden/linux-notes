@@ -192,3 +192,19 @@
   > gesture swipe down xdotool key super+s
   > gesture pinch in xdotool key ctrl+minus
   > gesture pinch out xdotool key ctrl+plus
+
+### 7. Snapper 备份还原
+
+* 安装
+  > `# pacman -S snapper`
+* 配置
+
+  > ```shell
+  > # snapper create-config /
+  > # snapper set-config ALOW_GROUPS="wheel"
+  > # snapper list
+
+* 创建
+  > `$ snapper create`
+* 还原
+  > `$ snapper undochange 1..0`
