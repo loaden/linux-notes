@@ -266,7 +266,7 @@
   > ```shell
   > # emerge -av gentoo-sources
   > # eselect kernel list
-  > # eselect kernel set 1
+  > # eselect kernel set <number>
   > # ls -l /usr/src
 
 * 从官方二进制内核生成配置
