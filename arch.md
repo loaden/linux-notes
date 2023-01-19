@@ -69,7 +69,7 @@
 
   > ```shell
   > # ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-  > # hwclock --systohc
+  > # hwclock --systohc --localtime
 
 * 中文语言和字体
 
