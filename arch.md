@@ -202,9 +202,14 @@
   > ```shell
   > # snapper create-config /
   > # snapper set-config ALLOW_GROUPS="wheel"
-  > # snapper list
 
 * 创建
   > `$ snapper create`
+  >
+  > * snapper create -d init -c number
+  > * snapper create -d desc
+
+* 查看
+  > `$ snapper list`
 * 还原
   > `$ snapper undochange 1..0`
