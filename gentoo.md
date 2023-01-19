@@ -106,7 +106,11 @@
 * 内核与硬件驱动
   > `# emerge -av linux-firmware gentoo-kernel-bin`
 * 常用工具
-  > `# emerge -av sudo gentoolkit pfl bash-completion`
+
+  > ```shell
+  > # emerge -av sudo gentoolkit pfl bash-completion
+  > # dispatch-conf
+
 * 中文字体
   > `# emerge -av source-han-sans`
 * 网络
@@ -114,7 +118,7 @@
   > ```shell
   > # euse -p net-wireless/iwd standalone wired
   > # emerge -av iwd
-  > # systemd enable iwd
+  > # systemctl enable iwd
 
 * 电源管理
 
@@ -145,9 +149,10 @@
 
   > ```shell
   > # euse -p gui-apps/waybar network pulseaudio tray wifi
-  > # dispatch-conf
   > # emerge -av --autounmask waybar
+  > # dispatch-conf
   > # emerge -av --autounmask =fontawesome-6.1.1
+  > # dispatch-conf
 
 * 启动器
   > `# emerge -av --autounmask wofi`
