@@ -10,6 +10,8 @@
   > [arch.md](arch.md)
 * [Gentoo](https://www.gentoo.org/) *适合学习*
   > [gentoo.md](gentoo.md)
+* [LFS](https://github.com/loaden/bash-lfs)
+  > `https://github.com/loaden/bash-lfs`
 
 ## 共同完善
 
