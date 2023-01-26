@@ -87,10 +87,10 @@
 * [分区挂载表](etc/fstab)
 
   > ```text
-  > # <file system>  <mount point>  <type>  <options>      <dump>  <pass>
-  > /dev/nvme0n1p1   /boot/efi      vfat    umask=0077     0       0
-  > /dev/nvme0n1p2   /              btrfs   noatime,subvol=@gentoo,discard=async,ssd  0  0
-  > /dev/nvme0n1p2   /home          btrfs   noatime,subvol=@home,discard=async,ssd    0  0
+  > # <file system>  <mount point>  <type>  <options>               <dump>  <pass>
+  > /dev/nvme0n1p1   /boot/efi      vfat    umask=0077              0       0
+  > /dev/nvme0n1p2   /              btrfs   noatime,subvol=@gentoo  0       0
+  > /dev/nvme0n1p2   /home          btrfs   noatime,subvol=@home    0       0
 
 * 弱密码
   > `# sed -i 's/everyone/none/' /etc/security/passwdqc.conf`
