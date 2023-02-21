@@ -120,12 +120,6 @@
   > # emerge -av iwd
   > # systemctl enable iwd
 
-* 电源管理
-
-  > ```shell
-  > # emerge -av acpid
-  > # systemctl enable acpid
-
 * 创建与配置用户
 
   > ```shell
@@ -195,7 +189,7 @@
 * 文件管理器
   > `# emerge -av thunar`
 * 文本编辑器
-  > `# emerge -av gnome-text-editor`
+  > `# emerge -av mousepad`
 * 视频播放器
   > `# emerge -av mpv`
 * 音乐播放器
