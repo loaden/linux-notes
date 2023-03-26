@@ -256,11 +256,13 @@
 ### 3. 普通用户授权
 
   > `# nano /etc/polkit-1/rules.d/10-admin.rules`
+
   ```text
   polkit.addAdminRule(function(action, subject) {
     return ["unix-group:wheel"];
   });
   ```
+
   > `# systemctl restart polkit.service`
 
 ### 4. 字体配置
