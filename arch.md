@@ -233,3 +233,15 @@
   > `$ snapper list`
 * 还原
   > `$ snapper undochange 1..0`
+
+### 8. 电源管理（INTEL）
+
+* 安装电源管理服务
+  > `# pacman -S thermald`
+
+* 启用服务
+
+  ```shell
+  # systemctl enable thermald
+  # systemctl start thermald
+  ```
