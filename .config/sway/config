@@ -29,71 +29,10 @@ exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSO
 
 # 不显示标题
 default_border pixel
-
 # 窗口间隙
-gaps inner 2
-
-# 输入法
-# exec_always --no-startup-id flatpak run org.fcitx.Fcitx5
-exec_always fcitx5 -d --replace
-
+gaps inner 1
 # 鼠标点击切换焦点
 focus_follows_mouse no
-
-# 密码验证
-exec_always /usr/libexec/polkit-gnome-authentication-agent-1
-
-# 消息通知
-exec_always mako
-
-# 自动平铺
-exec_always $(killall -9 python3 -q || /bin/true) && python3 ~/.config/sway/autotiling.py
-
-# 截图
-bindsym $mod+Ctrl+f exec flameshot gui
-
-# 保护视力
-set $sunset $$(killall -9 wlsunset -q || /bin/true) && wlsunset -T 5500 -t 4000 -l 37.4 -L 118.0
-exec_always $sunset
-bindsym $mod+n exec $sunset
-bindsym $mod+Shift+n exec $(killall -9 wlsunset -q || /bin/true) && wlsunset -t 4500 -s $(date "+%H:%M")
-bindsym $mod+Shift+d exec $(killall -9 wlsunset -q || /bin/true) && wlsunset -T 6000 -t 5999 -S $(date "+%H:%M")
-
-# 媒体控制
-bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
-bindsym XF86AudioPlay exec playerctl play-pause
-bindsym XF86AudioNext exec playerctl next
-bindsym XF86AudioPrev exec playerctl previous
-
-# 屏幕亮度控制
-bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
-bindsym XF86MonBrightnessUp exec brightnessctl set +5%
-
-# GTK主题
-set $gnome-schema org.gnome.desktop.interface
-exec_always {
-    gsettings set $gnome-schema gtk-theme 'Adwaita-dark'
-    gsettings set $gnome-schema icon-theme 'Fluent-pink-dark'
-    gsettings set $gnome-schema cursor-theme 'Adwaita'
-    gsettings set $gnome-schema font-name 'Sans 10'
-}
-
-# 浮动窗口
-for_window [app_id="pavucontrol"] floating enable, resize set width 40 ppt height 30 ppt
-for_window [app_id="galculator"] floating enable
-for_window [app_id="xarchiver"] floating enable
-for_window [title="文件操作进度"] floating enable, resize set width 30 ppt height 20 ppt
-for_window [title="创建新归档文件"] floating enable
-for_window [app_id="qt5ct"] floating enable, sticky enable
-for_window [title="DING"] floating enable
-for_window [class="Wine"] floating enable
-for_window [app_id="system-config-printer"] floating enable, resize set width 35 ppt height 30 ppt
-
-# 随机壁纸
-output * bg $(find ~/.config/wallpapers -type f | shuf -n1) fill
 
 ### Output configuration
 #
@@ -105,7 +44,9 @@ output * bg $(find ~/.config/wallpapers -type f | shuf -n1) fill
 #
 #   output HDMI-A-1 resolution 1920x1080 position 1920,0
 #
-# You can get the names of your outputs by running: swaymsg -t get_outputs
+# You can get the names of your outputs by running:
+# 随机壁纸
+output * bg $(find ~/.config/wallpapers/ -type f | shuf -n1) fill
 
 ### Idle configuration
 #
@@ -137,6 +78,12 @@ exec swayidle -w \
 #
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
+input "1267:23:Elan_Touchpad" {
+    dwt enabled
+    tap enabled
+    natural_scroll enabled
+    middle_emulation enabled
+}
 input "1133:16461:Logitech_K400_Plus" {
     dwt enabled
     tap enabled
@@ -300,5 +247,72 @@ bar {
     #     inactive_workspace #32323200 #32323200 #5c5c5c
     # }
 }
+
+
+# 输入法
+# exec_always fcitx5 -d --replace
+exec_always ibus-daemon -drx
+
+# 密码验证
+exec_always /usr/libexec/polkit-gnome-authentication-agent-1
+
+# 消息通知
+exec_always mako
+
+# 自动平铺
+exec_always $(killall -9 python3 -q || /bin/true) && python3 ~/.config/sway/autotiling.py
+
+# 截图
+bindsym $mod+Ctrl+f exec flameshot gui
+
+# 保护视力
+set $sunset $$(killall -9 wlsunset -q || /bin/true) && wlsunset -T 5500 -t 4000 -l 37.4 -L 118.0
+exec_always $sunset
+bindsym $mod+n exec $sunset
+bindsym $mod+Shift+n exec $(killall -9 wlsunset -q || /bin/true) && wlsunset -t 4500 -s $(date "+%H:%M")
+bindsym $mod+Shift+d exec $(killall -9 wlsunset -q || /bin/true) && wlsunset -T 6000 -t 5999 -S $(date "+%H:%M")
+
+# 媒体控制
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+# 屏幕亮度控制
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+
+# GTK主题
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme 'Adwaita-dark'
+    gsettings set $gnome-schema icon-theme 'Fluent-pink-dark'
+    gsettings set $gnome-schema cursor-theme 'Adwaita'
+    gsettings set $gnome-schema font-name 'Sans 10'
+}
+
+# 浮动窗口
+for_window [app_id="pavucontrol"] floating enable, resize set width 40 ppt height 30 ppt
+for_window [app_id="galculator"] floating enable
+for_window [app_id="xarchiver"] floating enable
+for_window [app_id="system-config-printer"] floating enable, resize set width 35 ppt height 30 ppt
+for_window [title="文件操作进度"] floating enable, resize set width 30 ppt height 20 ppt
+for_window [title="创建新归档文件"] floating enable
+for_window [app_id="qt5ct"] floating enable, sticky enable
+for_window [title="DING"] floating enable
+
+# 截图
+bindsym $mod+shift+g exec grim -g "$(slurp)" - | wl-copy && notify-send "截图到剪贴板"
+bindsym $mod+shift+s exec grim -g "$(slurp)" - | swappy -f - -o - | wl-copy && notify-send "截图到剪贴板"
+bindsym $mod+Print exec grim ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && wl-copy < ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && notify-send "截图" ~/$(date +'%Y-%m-%d_%H%M%S.png')
+bindsym $mod+shift+p exec grim ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && wl-copy < ~/$(date +'%Y-%m-%d_%H%M%S.png') \
+    && notify-send "截图" ~/$(date +'%Y-%m-%d_%H%M%S.png')
+
 
 include /etc/sway/config.d/*
