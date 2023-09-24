@@ -23,7 +23,7 @@
  * Based on preferences in the following extensions: JustPerfection, dash2doc-lite, night theme switcher, and desktop cube
  *
  */
-const { Adw, Gdk, GLib, Gtk } = imports.gi;
+const { Adw, Gdk, GLib, Gtk, Gio, GObject} = imports.gi;
 
 const Config = imports.misc.config;
 
@@ -144,23 +144,22 @@ function fillPreferencesWindow(window) {
 	let switcher_pref_group = new Adw.PreferencesGroup({
 		title: _('Switcher'),
 	});
-	switcher_pref_group.add(buildRadioAdw(settings, "switcher-style", [_("Coverflow"), _("Timeline")], _("Style"), _("Pick the type of switcher.")))
+	switcher_pref_group.add(buildRadioAdw(settings, "switcher-style", new Map([ [_("Coverflow"), []], [_("Timeline"), []] ]), _("Style"), _("Pick the type of switcher.")))
 	switcher_pref_group.add(buildSpinAdw(settings, "offset", [-500, 500, 1, 10], _("Vertical Offset"), _("Positive value moves everything down, negative up.")));
-	switcher_pref_group.add(buildRadioAdw(settings, "position", [_("Bottom"), _("Top")], _("Window Title Position"), _("Place window title above or below the switcher.")));
-	switcher_pref_group.add(buildSwitcherAdw(settings, "enforce-primary-monitor", _("Enforce Primary Monitor"), _("Always show on the primary monitor, otherwise, show on the active monitor.")));
+	switcher_pref_group.add(buildRadioAdw(settings, "position", new Map([ [_("Bottom"), []], [_("Top"), []]]), _("Window Title Position"), _("Place window title above or below the switcher.")));
+	switcher_pref_group.add(buildSwitcherAdw(settings, "enforce-primary-monitor", [], _("Enforce Primary Monitor"), _("Always show on the primary monitor, otherwise, show on the active monitor.")));
 
-	let behavior_pref_group = new Adw.PreferencesGroup({
-		title: _("Behavior"),
-	});
-	behavior_pref_group.add(buildSwitcherAdw(settings, "hide-panel", _("Hide Panel"), _("Hide panel when switching widnows.")));
+	let switcher_looping_method_buttons = new Map([ [_("Flip Stack"), []], [_("Carousel"), []]]);
+	switcher_pref_group.add(buildRadioAdw(settings, "switcher-looping-method", switcher_looping_method_buttons, _("Looping Method"), _("How to cycle through windows.")));
+	switcher_pref_group.add(buildSwitcherAdw(settings, "hide-panel", [], _("Hide Panel"), _("Hide panel when switching windows.")));
 
 	let animation_pref_group = new Adw.PreferencesGroup({
 		title: _('Animation'),
 	});
 
     animation_pref_group.add(buildDropDownAdw(settings, "easing-function", easing_options, "Easing Function", "Determine how windows move."));
-    animation_pref_group.add(buildRangeAdw(settings, "animation-time", [0.01, 2, 0.001, [0.5, 1, 1.5]], _("Duration"), _("In seconds."), true));
-	animation_pref_group.add(buildSwitcherAdw(settings, "randomize-animation-times", _("Randomize Durations"), _("Each animation duration assigned randomly between 0 and configured duration")));
+    animation_pref_group.add(buildRangeAdw(settings, "animation-time", [0.01, 20, 0.001, [0.5, 1, 1.5]], _("Duration [s]"),  "", true));
+	animation_pref_group.add(buildSwitcherAdw(settings, "randomize-animation-times", [], _("Randomize Durations"), _("Each animation duration assigned randomly between 0 and configured duration.")));
 
 	let windows_pref_group = new Adw.PreferencesGroup({
 		title: _('Switcher Windows'),
@@ -172,43 +171,108 @@ function fillPreferencesWindow(window) {
 	}, {
 	    id: 'all-currentfirst', name: _("All workspaces, current first")
 	}];
-	windows_pref_group.add(buildDropDownAdw(settings, "current-workspace-only", options, _("Workspaces"), _("Switch between windows on current or on all workspaces")));
-	windows_pref_group.add(buildSwitcherAdw(settings, "switch-per-monitor", _("Current Monitor"), _("Switch between windows on current monitor")));
+	windows_pref_group.add(buildDropDownAdw(settings, "current-workspace-only", options, _("Workspaces"), _("Switch between windows on current or on all workspaces.")));
+	windows_pref_group.add(buildSwitcherAdw(settings, "switch-per-monitor", [], _("Current Monitor"), _("Switch between windows on current monitor.")));
 
 	let icon_pref_group = new Adw.PreferencesGroup({
 		title: _("Icon"),
 	});
-	icon_pref_group.add(buildRadioAdw(settings, "icon-style", [_("Classic"), _("Overlay")], _("Application Icon Style")));
-	icon_pref_group.add(buildRangeAdw(settings, "overlay-icon-size", [0, 1024, 1, [32, 64, 128, 256, 512]], _("Overlay Icon Size"), _("Set the overlay icon size in pixels."), true));
-	icon_pref_group.add(buildRangeAdw(settings, "overlay-icon-opacity", [0, 1, 0.001, [0.25, 0.5, 0.75]], _("Overlay Icon Opacity"), _("Set the overlay icon opacity."), true));
-	icon_pref_group.add(buildSwitcherAdw(settings, "icon-has-shadow", _("Icon Shadow")));
+	let size_row = buildRangeAdw(settings, "overlay-icon-size", [0, 1024, 1, [32, 64, 128, 256, 512]], _("Overlay Icon Size"), _("Set the overlay icon size in pixels."), true);
+	let opacity_row = buildRangeAdw(settings, "overlay-icon-opacity", [0, 1, 0.001, [0.25, 0.5, 0.75]], _("Overlay Icon Opacity"), _("Set the overlay icon opacity."), true);
+
+	let buttons = new Map([ [_("Classic"), []], [_("Overlay"), [size_row, opacity_row]] ]);
+	icon_pref_group.add(buildRadioAdw(settings, "icon-style", buttons, _("Application Icon Style")));
+	icon_pref_group.add(size_row);
+	icon_pref_group.add(opacity_row);
+	icon_pref_group.add(buildSwitcherAdw(settings, "icon-has-shadow", [], _("Icon Shadow")));
 
 	let window_size_pref_group = new Adw.PreferencesGroup({
-		title: _("Window Size")
+		title: _("Windows")
 	});
-	window_size_pref_group.add(buildRangeAdw(settings, "preview-to-monitor-ratio", [0, 1, 0.001, [0.250, 0.500, 0.750]], _("Window Preview Size to Monintor Size Ratio"), _("Maximum ratio of window preview size to monitor size."), true));
-	window_size_pref_group.add(buildRangeAdw(settings, "preview-scaling-factor", [0, 1, 0.001, [0.250, 0.500, 0.800]], _("Off-center Size Factor"), _("Factor by which to successively shrink previews off to the side"), true));
+	window_size_pref_group.add(buildRangeAdw(settings, "preview-to-monitor-ratio", [0, 1, 0.001, [0.250, 0.500, 0.750]], _("Window Preview Size to Monitor Size Ratio"), _("Maximum ratio of window preview size to monitor size."), true));
+	window_size_pref_group.add(buildRangeAdw(settings, "preview-scaling-factor", [0, 1, 0.001, [0.250, 0.500, 0.800]], _("Off-center Size Factor"), _("Factor by which to successively shrink previews off to the side."), true));
+
+	let background_application_switcher_pref_group = new Adw.PreferencesGroup({
+		title: _('Application Switcher'),
+	});
+	background_application_switcher_pref_group.add(buildSwitcherAdw(settings, "switch-application-behaves-like-switch-windows", [], _("Make the Application Switcher Behave Like the Window Switcher"), _("Don't group windows of the same application in a subswitcher.")));
+	background_application_switcher_pref_group.add(buildRangeAdw(settings, "desaturate-factor", [0, 1, 0.001, [0.25, 0.5, 0.75]], _("Desaturate"), _("Larger means more desaturation."), true));
+	background_application_switcher_pref_group.add(buildSpinAdw(settings, "blur-sigma", [0, 20, 1, 1], _("Blur"), _("Larger means more blurry.")));
+
+	let color_row = new Adw.ActionRow({
+		title: _("Tint"),
+		subtitle: _("The opacity of the color controls how much it is blended. The theme color is blended at 0.75."),
+	});
+	background_application_switcher_pref_group.add(color_row);
+
+	let use_tint_switch = new Gtk.Switch({
+		valign: Gtk.Align.CENTER,
+		active: settings.get_boolean("use-tint"),
+	});
+	settings.bind("use-tint", use_tint_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+	color_row.add_suffix(use_tint_switch);
+
+	let choose_tint_box = new Gtk.Box({
+	 	orientation: Gtk.Orientation.HORIZONTAL,
+	 	spacing: 10,
+	 	valign: Gtk.Align.CENTER,
+ 	});
+	color_row.add_suffix(choose_tint_box);
+	settings.bind("use-tint", choose_tint_box, "sensitive", Gio.SettingsBindFlags.GET);
+
+	let color_dialog = new Gtk.ColorDialog({
+		with_alpha: true,
+	});
+
+	let color_button = new Gtk.ColorDialogButton({
+		valign: Gtk.Align.CENTER,
+		dialog: color_dialog,
+	});
+
+	let use_theme_color_button = new Gtk.ToggleButton({
+		label: "Use Theme Color",
+		valign: Gtk.Align.CENTER,
+	});
+
+	use_theme_color_button.bind_property("active", color_button, "sensitive", GObject.BindingFlags.INVERT_BOOLEAN | GObject.BindingFlags.SYNC_CREATE);
+	settings.bind("use-theme-color-for-tint-color", use_theme_color_button, "active", Gio.SettingsBindFlags.DEFAULT);
+	choose_tint_box.append(use_theme_color_button);
+	choose_tint_box.append(color_button);
+
+	let c = settings.get_value("tint-color").deep_unpack();
+	let rgba = color_button.rgba;
+	rgba.red = c[0];
+	rgba.green = c[1];
+	rgba.blue = c[2];
+	rgba.alpha = c[3];
+	color_button.set_rgba(rgba);
+	color_button.connect('notify::rgba', _ => {
+        let c = color_button.rgba;
+        let val = new GLib.Variant("(dddd)", [c.red, c.green, c.blue, c.alpha]);
+        settings.set_value("tint-color", val);
+    });
+
+	color_row.set_activatable_widget(use_tint_switch);
+
+	reset_button = makeResetButton();
+	reset_button.connect("clicked", function(widget) {
+		settings.reset("use-tint");
+		settings.reset("use-theme-color-for-tint-color");
+	});
+	color_row.add_suffix(reset_button);
+
+	background_application_switcher_pref_group.add(buildSwitcherAdw(settings, "use-glitch-effect", [], _("Glitch")));
 
 	let background_pref_group = new Adw.PreferencesGroup({
 		title: _('Background'),
 	});
-	background_pref_group.add(buildRangeAdw(settings, "dim-factor", [0, 1, 0.001, [0.25, 0.5, 0.75]], _("Background Dim-factor"), _("Smaller means darker."), true));
+	background_pref_group.add(buildRangeAdw(settings, "dim-factor", [0, 1, 0.001, [0.25, 0.5, 0.75]], _("Dim-factor"), _("Smaller means darker."), true));
 
 	let keybinding_pref_group = new Adw.PreferencesGroup({
 		title: _("Keybindings"),
 	});
-	keybinding_pref_group.add(buildSwitcherAdw(settings, "bind-to-switch-windows", _("Bind to 'switch-windows'")));
-	keybinding_pref_group.add(buildSwitcherAdw(settings, "bind-to-switch-applications", _("Bind to 'switch-applications'")));
-
-	general_page.add(switcher_pref_group);
-	general_page.add(animation_pref_group);
-	general_page.add(icon_pref_group);
-	general_page.add(windows_pref_group);
-	general_page.add(window_size_pref_group);
-	general_page.add(behavior_pref_group);
-	general_page.add(background_pref_group);
-	general_page.add(keybinding_pref_group);
-
+	keybinding_pref_group.add(buildSwitcherAdw(settings, "bind-to-switch-windows", [], _("Bind to 'switch-windows'")));
+	keybinding_pref_group.add(buildSwitcherAdw(settings, "bind-to-switch-applications", [background_application_switcher_pref_group], _("Bind to 'switch-applications'")));
 
 	let pcorrection_pref_group = new Adw.PreferencesGroup({
 		title: _("Perspective Correction")
@@ -222,20 +286,25 @@ function fillPreferencesWindow(window) {
 	let highlight_mouse_over_pref_group = new Adw.PreferencesGroup({
 		title: _("Highlight Window Under Mouse"),
 	});
-	highlight_mouse_over_pref_group.add(buildSwitcherAdw(settings, "highlight-mouse-over", _("Highlight Window Under Mouse"), _("Draw embelishment on window under the mouse to know the effects of clicking.")));
-	highlight_mouse_over_pref_group.add(buildSwitcherAdw(settings, "raise-mouse-over", _("Raise Window Under Mouse"), _("Raise the window under the mouse above all others.")));
+	window_size_pref_group.add(buildSwitcherAdw(settings, "highlight-mouse-over", [], _("Highlight Window Under Mouse"), _("Draw embelishment on window under the mouse to know the effects of clicking.")));
+	window_size_pref_group.add(buildSwitcherAdw(settings, "raise-mouse-over", [], _("Raise Window Under Mouse"), _("Raise the window under the mouse above all others.")));
 
-	let tweaks_page = new Adw.PreferencesPage({
+	/*let tweaks_page = new Adw.PreferencesPage({
 		title: _('Tweaks'),
 		icon_name: 'applications-symbolic',
 	});
 	tweaks_page.add(pcorrection_pref_group);
-	tweaks_page.add(highlight_mouse_over_pref_group);
+	tweaks_page.add(highlight_mouse_over_pref_group);*/
 
-	let appearance_page = new Adw.PreferencesPage({
-		title: _("Appearance"),
-		icon_name: 'dash-symbolic',
-	});
+	general_page.add(switcher_pref_group);
+	general_page.add(animation_pref_group);
+	general_page.add(icon_pref_group);
+	general_page.add(windows_pref_group);
+	general_page.add(window_size_pref_group);
+	general_page.add(background_pref_group);
+	general_page.add(background_application_switcher_pref_group);
+	general_page.add(pcorrection_pref_group);
+	general_page.add(keybinding_pref_group);
 
 	let contribution_page = new Adw.PreferencesPage({
 		title: _("Contribute"),
@@ -307,13 +376,12 @@ function fillPreferencesWindow(window) {
 
 	window.add(general_page);
 	// window.add(appearance_page);
-	window.add(tweaks_page)
 	window.add(contribution_page);
 
 	window.set_search_enabled(true);
 }
 
-function buildSwitcherAdw(settings, key, title, subtitle=null) {
+function buildSwitcherAdw(settings, key, dependant_widgets, title, subtitle=null) {
 	let pref = new Adw.ActionRow({
 		title: title,
 	});
@@ -334,6 +402,16 @@ function buildSwitcherAdw(settings, key, title, subtitle=null) {
 	pref.set_activatable_widget(switcher);
 	pref.add_suffix(switcher);
 
+	switcher.connect('notify::active', function(widget) {
+		for (let dep of dependant_widgets) {
+			dep.set_sensitive(widget.get_active());
+		}
+	});
+
+	for (let widget of dependant_widgets) {
+		widget.set_sensitive(switcher.get_active());
+	}
+
 	reset_button = makeResetButton();
 	reset_button.connect("clicked", function(widget) {
 		settings.reset(key);
@@ -343,13 +421,12 @@ function buildSwitcherAdw(settings, key, title, subtitle=null) {
 	return pref;
 }
 
-function buildRangeAdw(settings, key, values, title, subtitle=null, draw_value=false) {
+function buildRangeAdw(settings, key, values, title, subtitle="", draw_value=false) {
 	let [min, max, step, defvs] = values;
 
 	let pref = new Adw.ActionRow({
-		title: title,
-	});
-	if (subtitle != null) {
+		title: title,	});
+	if (subtitle !== null && subtitle !== "") {
 		pref.set_subtitle(subtitle);
 	}
 	let range = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, min, max, step);
@@ -395,25 +472,30 @@ function buildRadioAdw(settings, key, buttons, title, subtitle=null) {
 	let radio = new Gtk.ToggleButton();
 
 	let radio_for_button = {};
-	for (let button of buttons) {
-		radio = new Gtk.ToggleButton({group: radio, label: button});
-		if (getBaseString(button) == settings.get_string(key)) {
+	for (let button_name of buttons.keys()) {
+		radio = new Gtk.ToggleButton({group: radio, label: button_name});
+		if (getBaseString(button_name) == settings.get_string(key)) {
 			radio.set_active(true);
 		}
-		radio_for_button[button] = radio;
+		radio_for_button[button_name] = radio;
 		radio.connect('toggled', function(widget) {
 			if (widget.get_active()) {
 				settings.set_string(key, getBaseString(widget.get_label()));
 			}
+			for (let pref_row of buttons.get(button_name)) {
+				pref_row.set_sensitive(widget.get_active());
+			}
 		});
-
+		for (let pref_row of buttons.get(button_name)) {
+			pref_row.set_sensitive(radio_for_button[button_name].get_active());
+		}
 		hbox.append(radio);
 	};
 
 	reset_button = makeResetButton();
 	reset_button.connect("clicked", function(widget) {
 		settings.reset(key);
-		for (let button of buttons) {
+		for (let button of buttons.keys()) {
 			if (getBaseString(button) == settings.get_string(key)) {
 				radio_for_button[button].set_active(true);
 			}

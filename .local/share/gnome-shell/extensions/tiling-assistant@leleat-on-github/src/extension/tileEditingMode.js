@@ -50,6 +50,8 @@ class TileEditingMode extends St.Widget {
     }
 
     open() {
+        this._windows = Twm.getTopTileGroup();
+
         const grab = Main.pushModal(this);
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
@@ -59,7 +61,6 @@ class TileEditingMode extends St.Widget {
 
         this._grab = grab;
         this._haveModal = true;
-        this._windows = Twm.getTopTileGroup();
 
         const openWindows = Twm.getWindows();
         if (!openWindows.length || !this._windows.length) {
@@ -80,7 +81,7 @@ class TileEditingMode extends St.Widget {
 
         // The windows may not be at the foreground. They just weren't
         // overlapping other windows. So raise the entire tile group.
-        this._windows.forEach(w => w.raise());
+        this._windows.forEach(w => w.raise_and_make_recent?.() ?? w.raise());
 
         // Create the active selection indicator.
         const window = this._windows[0];
@@ -332,7 +333,7 @@ const DefaultKeyHandler = class DefaultKeyHandler {
                 return Modes.CLOSE;
 
             // Re-raise tile group, so it isn't below the just-untiled window
-            this._windows[0].raise();
+            this._windows[0].raise_and_make_recent?.() ?? this._windows[0].raise();
             this._selectIndicator.focus(selectedRect, null);
 
         // [Enter] / [Esc]ape Tile Editing Mode

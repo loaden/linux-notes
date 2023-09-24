@@ -41,7 +41,7 @@ var LayoutManager = class TilingLayoutsManager {
         this._currItem = null;
         this._currRect = null;
 
-        // Preview to show where the window will tile to, similiar
+        // Preview to show where the window will tile to, similar
         // to the tile preview when dnding to the screen edges
         this._rectPreview = null;
 
@@ -295,13 +295,12 @@ const LayoutSearch = GObject.registerClass({
 }, class TilingLayoutsSearch extends St.Widget {
     _init(layouts) {
         const activeWs = global.workspace_manager.get_active_workspace();
-        const allWorkArea = activeWs.get_work_area_all_monitors();
         super._init({
             reactive: true,
-            x: allWorkArea.x,
-            y: allWorkArea.y,
-            width: allWorkArea.width,
-            height: allWorkArea.height
+            x: Main.uiGroup.x,
+            y: Main.uiGroup.y,
+            width: Main.uiGroup.width,
+            height: Main.uiGroup.height
         });
         Main.uiGroup.add_child(this);
 

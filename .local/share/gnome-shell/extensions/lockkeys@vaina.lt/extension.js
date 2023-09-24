@@ -1,5 +1,6 @@
 const St = imports.gi.St;
 const Gio = imports.gi.Gio;
+const Gdk = imports.gi.Gdk;
 const Gtk = imports.gi.Gtk;
 const Clutter = imports.gi.Clutter;
 const GObject = imports.gi.GObject;
@@ -13,11 +14,9 @@ const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
 const Config = imports.misc.config;
 
-const X11 = imports.gi.GLib.getenv('XDG_SESSION_TYPE') == 'x11';
 const POST_40 = parseFloat(Config.PACKAGE_VERSION) >= 40;
 const POST_3_36 = parseFloat(Config.PACKAGE_VERSION) >= 3.36;
-const Keymap = X11       ? imports.gi.Gdk.Keymap.get_default():
-               POST_3_36 ? Clutter.get_default_backend().get_default_seat().get_keymap():
+const Keymap = POST_3_36 ? Clutter.get_default_backend().get_default_seat().get_keymap():
 			               Clutter.get_default_backend().get_keymap();
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -58,6 +57,8 @@ const LockKeysIndicator = GObject.registerClass(
 class LockKeysIndicator extends PanelMenu.Button {
     _init() {
         super._init(0.0, " LockKeysIndicator");
+
+        this.iconTheme = this.createIconThemeCompat();
         this.numIcon = new St.Icon({
             style_class: 'system-status-icon lockkeys-status-icon'
         });
@@ -92,18 +93,19 @@ class LockKeysIndicator extends PanelMenu.Button {
         this.indicatorStyle = new HighlightIndicator(this);
     }
 
+    createIconThemeCompat() {
+        if (St.IconTheme) {
+            return new St.IconTheme();
+        }
+
+        return new Gtk.IconTheme();
+    }
+
 	getCustIcon(icon_name) {
-		//workaround for themed icon
-		//new Gio.ThemedIcon({ name: icon_name });
-		//return Gio.ThemedIcon.new_with_default_fallbacks(icon_name);
+		if (this.iconTheme.has_icon(icon_name)) {
+            return Gio.ThemedIcon.new_with_default_fallbacks(icon_name);
+        }
 		let icon_path = Me.dir.get_child('icons').get_child(icon_name + ".svg").get_path();
-		let theme = Gtk.IconTheme.get_default();
-		if (theme) {
-			let theme_icon = theme.lookup_icon(icon_name, -1, 2);
-			if (theme_icon) {
-				icon_path = theme_icon.get_filename();
-			}
-		}
 		return Gio.FileIcon.new(Gio.File.new_for_path(icon_path));
 	}
 
@@ -114,13 +116,24 @@ class LockKeysIndicator extends PanelMenu.Button {
 	setActive(enabled) {
 		if (enabled) {
 			this._keyboardStateChangedId = Keymap.connect('state-changed', this.handleStateChange.bind(this));
-			this._settingsChangeId = this.config.settings.connect('changed::' + STYLE, this.handleSettingsChange.bind(this));
+			this._settingsChangedId = this.config.settings.connect('changed::' + STYLE, this.handleSettingsChange.bind(this));
+			if (St.IconTheme) {
+			   this._iconThemeChangedId = this.iconTheme.connect('changed', this.handleSettingsChange.bind(this));
+			} else {
+			   this._iconThemeChangedId = St.Settings.get().connect('notify::gtk-icon-theme', this.handleSettingsChange.bind(this));
+			}
 			this.handleSettingsChange();
 		} else {
 			Keymap.disconnect(this._keyboardStateChangedId);
 			this._keyboardStateChangedId = 0;
-			this.config.settings.disconnect(this._settingsChangeId);
-			this._settingsChangeId = 0;
+			this.config.settings.disconnect(this._settingsChangedId);
+			this._settingsChangedId = 0;
+			if (St.IconTheme) {
+			   this.iconTheme.disconnect(this._iconThemeChangedId);
+			} else {
+			   St.Settings.get().disconnect(this._iconThemeChangedId);
+			}
+			this._iconThemeChangedId = 0;
 		}
 	}
 
@@ -132,6 +145,7 @@ class LockKeysIndicator extends PanelMenu.Button {
 	}
 
 	handleSettingsChange(actor, event) {
+		this.handleIconThemeChangeCompat();
 		if (this.config.isVisibilityStyle())
 			this.indicatorStyle = new VisibilityIndicator(this);
 		else if (this.config.isVisibilityStyleCapslock())
@@ -139,6 +153,13 @@ class LockKeysIndicator extends PanelMenu.Button {
 		else
 			this.indicatorStyle = new HighlightIndicator(this);
 		this.updateState();
+	}
+
+	handleIconThemeChangeCompat() {
+		if (St.IconTheme) {
+			 return;
+		}
+		this.iconTheme.set_custom_theme(St.Settings.get().gtk_icon_theme);
 	}
 
 	handleStateChange(actor, event) {

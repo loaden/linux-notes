@@ -4,9 +4,10 @@
   "name": "Clipboard Indicator",
   "shell-version": [
     "42",
-    "43"
+    "43",
+    "44"
   ],
   "url": "https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator",
   "uuid": "clipboard-indicator@tudmotu.com",
-  "version": 44
+  "version": 47
 }
