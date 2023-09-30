@@ -12,7 +12,7 @@
   > [gentoo.md](gentoo.md)
 * [LFS](https://github.com/loaden/bash-lfs) *适合学习*
   > `https://github.com/loaden/bash-lfs`
-  * 为了降低难度，实现了全脚本分阶段或完整编译，默认支持 Btrfs + 子卷。
+  * [bash-lfs](<https://github.com/loaden/bash-lfs>) 为了降低难度，实现了全脚本分阶段或完整编译，默认支持> Btrfs + 子卷。
 
 ## 共同完善
 
