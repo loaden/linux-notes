@@ -1,6 +1,6 @@
 [user]
-	name = Yuchen Deng
-	email = loaden@gmail.com
+	name = loaden
+	email = loaden@live.com
 [core]
 	autocrlf = input
 	safecrlf = warn
@@ -8,3 +8,5 @@
 	spellingdictionary = en
 [pull]
 	rebase = false
+[remote "origin"]
+	proxy =
