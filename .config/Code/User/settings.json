@@ -1,38 +1,26 @@
 {
     "window.titleBarStyle": "custom",
-    "editor.fontFamily": "'Monaco', 'Consolas', 'Source Code Pro', 'Droid Sans Mono', 'monospace'",
+    "workbench.colorTheme": "Default Dark+",
+    "editor.fontFamily": "'Monaco', 'Consolas', 'Source Code Pro', 'Monospace'",
     "editor.fontSize": 16,
     "editor.formatOnPaste": true,
-    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.guides.bracketPairs": true,
+    "editor.minimap.enabled": true,
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
-    "terminal.integrated.shell.windows": "cmd.exe",
-    "terminal.integrated.shell.linux": "bash",
-    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
-    "cmake.configureOnOpen": false,
-    "cmake.debugConfig": {
-        "name": "(gdb) Launch",
-        "type": "cppdbg",
-        "request": "launch",
-        "args": [],
-        "stopAtEntry": true,
-        "cwd": "${workspaceFolder}",
-        "environment": [],
-        "externalConsole": true,
-        "MIMode": "gdb",
-        "miDebuggerPath": "gdb",
-        "windows": {
-            "miDebuggerPath": "gdb.exe"
-        },
-        "setupCommands": [
-            {
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": true
-            }
-        ],
+    "extensions.ignoreRecommendations": true,
+
+    // 自动修复
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
     },
-    "latex-workshop.message.update.show": false,
+
+    // Git
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+
+    // LaTeX
     "latex-workshop.view.pdf.viewer": "browser",
     "latex-workshop.latex.recipes": [
         {
@@ -54,11 +42,20 @@
             ]
         }
     ],
-    "gitlens.showWhatsNewAfterUpgrades": false,
-    "gitlens.menus": false,
-    "gitlens.codeLens.enabled": false,
-    "gitlens.statusBar.enabled": false,
-    "git.autofetch": true,
-    "git.confirmSync": false,
-    "workbench.colorTheme": "Default Dark+"
+
+    // Dart
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": false
+    },
+    "dart.debugExternalPackageLibraries": false,
+    "dart.debugSdkLibraries": false,
 }
