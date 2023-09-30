@@ -24,6 +24,8 @@ var Handler = class TilingMoveHandler {
 
         this._displaySignals = [];
         const g1Id = global.display.connect('grab-op-begin', (src, window, grabOp) => {
+            grabOp &= ~1024; // META_GRAB_OP_WINDOW_FLAG_UNCONSTRAINED
+
             if (window && moveOps.includes(grabOp))
                 this._onMoveStarted(window, grabOp);
         });
@@ -166,14 +168,7 @@ var Handler = class TilingMoveHandler {
             this._pointerDidntMove = false;
             this._movingTimerDuration = 20;
             this._movingTimeoutsSinceUpdate = 0;
-
-            const activeWs = global.workspace_manager.get_active_workspace();
-            const monitor = global.display.get_current_monitor();
-            const workArea = new Rect(activeWs.get_work_area_for_monitor(monitor));
-
-            const topTileGroup = Twm.getTopTileGroup({ skipTopWindow: true });
-            const tRects = topTileGroup.map(w => w.tiledRect);
-            const freeScreenRects = workArea.minus(tRects);
+            this._topTileGroup = Twm.getTopTileGroup({ skipTopWindow: true });
 
             // When low performance mode is enabled we use a timer to periodically
             // update the tile previews so that we don't update the tile preview
@@ -186,8 +181,6 @@ var Handler = class TilingMoveHandler {
                         this,
                         grabOp,
                         window,
-                        topTileGroup,
-                        freeScreenRects,
                         true
                     )
                 );
@@ -197,7 +190,7 @@ var Handler = class TilingMoveHandler {
                     // 'Quick throws' of windows won't create a tile preview since
                     // the timeout for onMoving may not have happened yet. So force
                     // 1 call of the tile preview updates for those quick actions.
-                    this._onMoving(grabOp, window, topTileGroup, freeScreenRects);
+                    this._onMoving(grabOp, window);
                     this._onMoveFinished(window);
                 });
 
@@ -209,8 +202,6 @@ var Handler = class TilingMoveHandler {
                         this,
                         grabOp,
                         window,
-                        topTileGroup,
-                        freeScreenRects,
                         false
                     )
                 );
@@ -274,7 +265,9 @@ var Handler = class TilingMoveHandler {
         this._favoriteLayout = [];
         this._favoritePreviews?.forEach(p => p.destroy());
         this._favoritePreviews = [];
+        this._freeScreenRects = [];
         this._anchorRect = null;
+        this._topTileGroup = null;
         this._tilePreview.close();
         this._currPreviewMode = MoveModes.ADAPTIVE_TILING;
         this._isGrabOp = false;
@@ -289,7 +282,7 @@ var Handler = class TilingMoveHandler {
     // the current position.
     // Without the lowPerfMode enabled this will be called whenever the window is
     // moved (by listening to the position-changed signal)
-    _onMoving(grabOp, window, topTileGroup, freeScreenRects, lowPerfMode = false) {
+    _onMoving(grabOp, window, lowPerfMode = false) {
         const [x, y] = global.get_pointer();
         const currPointerPos = { x, y };
 
@@ -376,7 +369,7 @@ var Handler = class TilingMoveHandler {
                 this._edgeTilingPreview(window, grabOp);
                 break;
             case MoveModes.ADAPTIVE_TILING:
-                this._adaptiveTilingPreview(window, grabOp, topTileGroup, freeScreenRects);
+                this._adaptiveTilingPreview(window, grabOp);
                 break;
             case MoveModes.FAVORITE_LAYOUT:
                 this._favoriteLayoutTilingPreview(window);
@@ -390,13 +383,22 @@ var Handler = class TilingMoveHandler {
     _preparePreviewModeChange(newMode, window) {
         this._tileRect = null;
         this._ignoreTA = false;
+        this._topTileGroup = Twm.getTopTileGroup({ skipTopWindow: true });
+
+        const activeWs = global.workspace_manager.get_active_workspace();
+        const monitor = global.display.get_current_monitor();
+        const workArea = new Rect(activeWs.get_work_area_for_monitor(monitor));
+        const tRects = this._topTileGroup.map(w => w.tiledRect);
+        this._freeScreenRects = workArea.minus(tRects);
 
         switch (this._currPreviewMode) {
             case MoveModes.ADAPTIVE_TILING:
+                this._monitorNr = global.display.get_current_monitor();
                 this._splitRects.clear();
                 this._anchorRect = null;
                 break;
             case MoveModes.FAVORITE_LAYOUT:
+                this._monitorNr = global.display.get_current_monitor();
                 this._favoritePreviews.forEach(p => {
                     p.ease({
                         opacity: 0,
@@ -427,7 +429,7 @@ var Handler = class TilingMoveHandler {
     }
 
     _restoreSizeAndRestartGrab(window, px, py, grabOp) {
-        global.display.end_grab_op(global.get_current_time());
+        global.display.end_grab_op?.(global.get_current_time());
 
         const rect = window.get_frame_rect();
         const x = px - rect.x;
@@ -438,13 +440,19 @@ var Handler = class TilingMoveHandler {
             xAnchor: px,
             skipAnim: this._wasMaximizedOnStart
         });
+
+        if (!global.display.begin_grab_op) {
+            this._onMoveStarted(window, grabOp);
+            return;
+        }
+
         // untiledRect is null, if the window was maximized via non-extension
         // way (dblc-ing the titlebar, maximize button...). So just get the
         // restored window's rect directly... doesn't work on Wayland because
-        // get_frame_rect() doesnt return the correct size immediately after
+        // get_frame_rect() doesn't return the correct size immediately after
         // calling untile()... in that case just guess a random size
         if (!untiledRect && !Meta.is_wayland_compositor())
-            untiledRect = new Rect(rect);
+            untiledRect = new Rect(window.get_frame_rect());
 
         const untiledWidth = untiledRect?.width ?? 1000;
         const postUntileRect = window.get_frame_rect();
@@ -486,7 +494,8 @@ var Handler = class TilingMoveHandler {
                     // Only update the monitorNr, if the latest timer timed out.
                     if (timerId === this._latestMonitorLockTimerId) {
                         this._monitorNr = global.display.get_current_monitor();
-                        if (global.display.get_grab_op() === grabOp) // !
+                        if (global.display.is_grabbed?.() ||
+                            global.display.get_grab_op?.() === grabOp) // !
                             this._edgeTilingPreview(window, grabOp);
                     }
 
@@ -597,16 +606,16 @@ var Handler = class TilingMoveHandler {
      *
      * @param {Meta.Window} window
      * @param {Meta.GrabOp} grabOp
-     * @param {Meta.Window[]} topTileGroup
-     * @param {Rect[]} freeScreenRects
      */
-    _adaptiveTilingPreview(window, grabOp, topTileGroup, freeScreenRects) {
-        if (!topTileGroup.length) {
+    _adaptiveTilingPreview(window, grabOp) {
+        if (!this._topTileGroup.length) {
             this._edgeTilingPreview(window, grabOp);
             return;
         }
 
-        const screenRects = topTileGroup.map(w => w.tiledRect).concat(freeScreenRects);
+        const screenRects = this._topTileGroup
+            .map(w => w.tiledRect)
+            .concat(this._freeScreenRects);
         const hoveredRect = screenRects.find(r => r.containsPoint(this._lastPointerPos));
         if (!hoveredRect) {
             this._tilePreview.close();
@@ -636,9 +645,9 @@ var Handler = class TilingMoveHandler {
             const atRightEdge = this._lastPointerPos.x > hoveredRect.x2 - edgeRadius;
 
             atTopEdge || atBottomEdge || atLeftEdge || atRightEdge
-                ? this._adaptiveTilingPreviewGroup(window, hoveredRect, topTileGroup,
+                ? this._adaptiveTilingPreviewGroup(window, hoveredRect,
                     { atTopEdge, atBottomEdge, atLeftEdge, atRightEdge })
-                : this._adaptiveTilingPreviewSingle(window, hoveredRect, topTileGroup);
+                : this._adaptiveTilingPreviewSingle(window, hoveredRect);
         }
     }
 
@@ -653,9 +662,8 @@ var Handler = class TilingMoveHandler {
      *
      * @param {Meta.Window} window
      * @param {Rect} hoveredRect
-     * @param {Meta.Window[]} topTileGroup
      */
-    _adaptiveTilingPreviewSingle(window, hoveredRect, topTileGroup) {
+    _adaptiveTilingPreviewSingle(window, hoveredRect) {
         const atTop = this._lastPointerPos.y < hoveredRect.y + hoveredRect.height * .25;
         const atBottom = this._lastPointerPos.y > hoveredRect.y + hoveredRect.height * .75;
         const atRight = this._lastPointerPos.x > hoveredRect.x + hoveredRect.width * .75;
@@ -666,8 +674,8 @@ var Handler = class TilingMoveHandler {
         if (splitHorizontally || splitVertically) {
             const idx = atTop && !atRight || atLeft ? 0 : 1;
             const size = splitHorizontally ? hoveredRect.width : hoveredRect.height;
-            const orienation = splitHorizontally ? Orientation.V : Orientation.H;
-            this._tileRect = hoveredRect.getUnitAt(idx, size / 2, orienation);
+            const orientation = splitHorizontally ? Orientation.V : Orientation.H;
+            this._tileRect = hoveredRect.getUnitAt(idx, size / 2, orientation);
         } else {
             this._tileRect = hoveredRect.copy();
         }
@@ -679,7 +687,7 @@ var Handler = class TilingMoveHandler {
         this._tilePreview.open(window, this._tileRect.meta, monitor);
         this._splitRects.clear();
 
-        const hoveredWindow = topTileGroup.find(w => {
+        const hoveredWindow = this._topTileGroup.find(w => {
             return w.tiledRect.containsPoint(this._lastPointerPos);
         });
 
@@ -696,7 +704,7 @@ var Handler = class TilingMoveHandler {
     }
 
     /**
-     * Similiar to _adaptiveTilingPreviewSingle(). But it's activated by hovering
+     * Similar to _adaptiveTilingPreviewSingle(). But it's activated by hovering
      * the very edges of a tiled window. And instead of affecting just 1 window
      * it can possibly re-tile multiple windows. A tiled window will be affected,
      * if it aligns with the edge that is being hovered. It's probably easier
@@ -704,15 +712,14 @@ var Handler = class TilingMoveHandler {
      *
      * @param {Meta.Window} window
      * @param {Rect} hoveredRect
-     * @param {Meta.Window[]} topTileGroup
      * @param {object} hovered contains booleans at which position the
      *      `hoveredRect` is hovered.
      */
-    _adaptiveTilingPreviewGroup(window, hoveredRect, topTileGroup, hovered) {
-        // Find the smallest window that will be affected and use it to calcuate
+    _adaptiveTilingPreviewGroup(window, hoveredRect, hovered) {
+        // Find the smallest window that will be affected and use it to calculate
         // the sizes of the preview. Determine the new tileRects for the rest
         // of the tileGroup via Rect.minus().
-        const smallestWindow = topTileGroup.reduce((smallest, w) => {
+        const smallestWindow = this._topTileGroup.reduce((smallest, w) => {
             if (hovered.atTopEdge) {
                 if (w.tiledRect.y === hoveredRect.y || w.tiledRect.y2 === hoveredRect.y)
                     return w.tiledRect.height < smallest.tiledRect.height ? w : smallest;
@@ -747,7 +754,7 @@ var Handler = class TilingMoveHandler {
         // of the smallestWindow.
         if (hovered.atTopEdge || hovered.atBottomEdge) {
             const getX1X2 = alignsAt => {
-                return topTileGroup.reduce((x1x2, w) => {
+                return this._topTileGroup.reduce((x1x2, w) => {
                     const currX = x1x2[0];
                     const currX2 = x1x2[1];
                     return alignsAt(w)
@@ -781,7 +788,7 @@ var Handler = class TilingMoveHandler {
         // the smallestWindow.
         } else {
             const getY1Y2 = alignsAt => {
-                return topTileGroup.reduce((y1y2, w) => {
+                return this._topTileGroup.reduce((y1y2, w) => {
                     const currY = y1y2[0];
                     const currY2 = y1y2[1];
                     return alignsAt(w)
@@ -818,7 +825,7 @@ var Handler = class TilingMoveHandler {
         this._tilePreview.open(window, this._tileRect.meta, monitor);
         this._splitRects.clear();
 
-        topTileGroup.forEach(w => {
+        this._topTileGroup.forEach(w => {
             const leftOver = w.tiledRect.minus(this._tileRect);
             const splitRect = leftOver[0];
             // w isn't an affected window.

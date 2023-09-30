@@ -84,6 +84,7 @@ var Manager = class Manager {
     _startWindowSwitcher(display, window, binding) {
         let windows = [];
         let currentWorkspace = this.workspace_manager.get_active_workspace();
+        let isApplicationSwitcher = false;
 
         // Construct a list with all windows
         let windowActors = global.get_window_actors();
@@ -96,17 +97,16 @@ var Manager = class Manager {
         windowActors = null;
 
         switch (binding.get_name()) {
-            case 'switch-panels':
-                // Switch between windows of all workspaces
-                windows = windows.filter(matchSkipTaskbar);
-                break;
-
             case 'switch-group':
                 // Switch between windows of same application from all workspaces
                 let focused = display.focus_window ? display.focus_window : windows[0];
                 windows = windows.filter(matchWmClass, focused.get_wm_class());
+                windows.sort(sortWindowsByUserTime);
                 break;
 
+            case 'switch-applications':
+            case 'switch-applications-backward':
+                isApplicationSwitcher = !this.platform.getSettings().switch_application_behaves_like_switch_windows
             default:
                 let currentOnly = this.platform.getSettings().current_workspace_only;
               	if (currentOnly === 'all-currentfirst') {
@@ -114,18 +114,19 @@ var Manager = class Manager {
               		// those from current workspace
               		let wins1 = windows.filter(matchWorkspace, currentWorkspace);
               		let wins2 = windows.filter(matchOtherWorkspace, currentWorkspace);
-                      // Sort by user time
-                      wins1.sort(sortWindowsByUserTime);
-                      wins2.sort(sortWindowsByUserTime);
-                      windows = wins1.concat(wins2);
-                      wins1 = [];
-                      wins2 = [];
+                    // Sort by user time
+                    wins1.sort(sortWindowsByUserTime);
+                    wins2.sort(sortWindowsByUserTime);
+                    windows = wins1.concat(wins2);
+                    wins1 = [];
+                    wins2 = [];
               	} else {
               	    let filter = currentOnly === 'current' ? matchWorkspace :
                           matchSkipTaskbar;
-                		// Switch between windows of current workspace
-                		windows = windows.filter(filter, currentWorkspace);
-              	}
+            		// Switch between windows of current workspace
+               		windows = windows.filter(filter, currentWorkspace);
+                    windows.sort(sortWindowsByUserTime);
+                }
                 break;
         }
 
@@ -136,15 +137,12 @@ var Manager = class Manager {
               win.get_monitor() == Main.layoutManager.currentMonitor.index );
         }
 
-        // Sort by user time
-        windows.sort(sortWindowsByUserTime);
-
         if (windows.length) {
             let mask = binding.get_mask();
             let currentIndex = windows.indexOf(display.focus_window);
 
             let switcher_class = this.platform.getSettings().switcher_class;
-            let switcher = new switcher_class(windows, mask, currentIndex, this);
+            let switcher = new switcher_class(windows, mask, currentIndex, this, null, isApplicationSwitcher, null);
         }
     }
 }

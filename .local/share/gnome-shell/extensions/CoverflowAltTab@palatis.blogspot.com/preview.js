@@ -25,6 +25,7 @@ const {
 const Lightbox = imports.ui.lightbox;
 const Main = imports.ui.main;
 
+
 /**
  * Direction and Placement properties values are set to be compatible with deprecated
  * Clutter.Gravity.
@@ -55,6 +56,11 @@ var Preview = GObject.registerClass({
         this._highlight = null;
         this._flash = null;
         this._entered = false;
+        this._effectNames = ['blur', 'glitch', 'desaturate', 'tint']
+        this._effectCounts = {};
+        for (let effect_name of this._effectNames) {
+            this._effectCounts[effect_name] = 0;
+        }
     }
 
     /**
@@ -90,6 +96,69 @@ var Preview = GObject.registerClass({
         } else {
             // Don't throw anything here, it may cause unstabilities
             logError("No method found for making preview the bottom layer");
+        }
+    }
+
+    addEffect(effect_class, constructor_argument, name, parameter_name, from_param_value, param_value, duration) {
+        duration = 0.99 * 1000.0 * duration;
+        let effect_name = name + "-effect";
+        let add_transition_name = effect_name + "-add";
+        let remove_transition_name = effect_name + "-remove";
+        let property_transition_name = `@effects.${effect_name}.${parameter_name}`;
+        if (this.get_transition(remove_transition_name) !== null) {
+            this.remove_transition(remove_transition_name);
+            let transition = Clutter.PropertyTransition.new(property_transition_name);
+            transition.progress_mode = Clutter.AnimationMode.LINEAR;
+            transition.duration = duration;
+            transition.remove_on_complete = true;
+            transition.set_from(this.get_effect(effect_name)[parameter_name]);
+            transition.set_to(param_value);
+            this.get_effect(effect_name)[parameter_name] = 1.0;
+            this.add_transition(add_transition_name, transition);
+        } else if (this._effectCounts[name] == 0) {
+            if (this.get_transition(add_transition_name) === null) {
+                let transition = Clutter.PropertyTransition.new(property_transition_name);
+                transition.progress_mode = Clutter.AnimationMode.EASE_IN_OUT_QUINT;
+                transition.duration = duration;
+                transition.remove_on_complete = true;
+                transition.set_to(param_value);
+                transition.set_from(from_param_value);
+                this._newFrameCount = 0;
+                this.add_effect_with_name(effect_name, new effect_class(constructor_argument));
+                this.add_transition(add_transition_name, transition);
+                this._effectCounts[name] = 1;
+            }
+        } else {
+            this._effectCounts[name] += 1;
+        }
+    }
+
+    removeEffect(name, parameter_name, value, duration) {
+        duration = 0.99 * 1000.0 * duration;
+        let effect_name = name + "-effect";
+        let add_transition_name = effect_name + "-add";
+        let remove_transition_name = effect_name + "-remove";
+        let property_transition_name = `@effects.${effect_name}.${parameter_name}`;
+        if (this._effectCounts[name] > 0) {
+            if (this._effectCounts[name] == 1) {
+                this.remove_transition(add_transition_name);
+                if (this.get_transition(remove_transition_name) === null) {
+                    let transition = Clutter.PropertyTransition.new(property_transition_name);
+                    transition.progress_mode = Clutter.AnimationMode.LINEAR;
+                    transition.duration = duration;
+                    transition.remove_on_complete = true;
+                    transition.set_from(this.get_effect(effect_name)[parameter_name]);
+                    transition.set_to(value);
+                    this.get_effect(effect_name)[parameter_name] = 1.0;
+                    this.add_transition(remove_transition_name, transition);
+                    transition.connect("completed", (trans) => {
+                        this.remove_effect_by_name(effect_name);
+                        this._effectCounts[name] = 0;
+                    });
+                }
+            } else {
+                this._effectCounts[name] -= 1;
+            }
         }
     }
 
@@ -130,15 +199,23 @@ var Preview = GObject.registerClass({
         }
     }
 
+    _getHighlightStyle(alpha) {
+        let bgcolor = this.switcher._getSwitcherBackgroundColor();
+        let style =`background-color: rgba(${bgcolor.red}, ${bgcolor.green}, ${bgcolor.blue}, ${alpha})`;
+        return style;
+    }
+
     vfunc_enter_event(crossingEvent) {
         if (this.switcher._destroying || this._entered == true) return Clutter.EVENT_PROPAGATE;
         this._entered = true;
-        if (this.switcher._settings.raise_mouse_over) this.make_top_layer(this.switcher.previewActor);
+        if (this.switcher._settings.raise_mouse_over) {
+            this.make_top_layer(this.switcher.previewActor);
+            this.switcher._raiseIcons();
+        }
         if (this.switcher._settings.highlight_mouse_over) {
             let window_actor = this.metaWin.get_compositor_private();
             if (this._highlight == null) {
                     this._highlight = new St.Bin({
-                    style_class: 'highlight',
                     opacity: 0,
                     width: this.width,
                     height: this.height,
@@ -146,7 +223,7 @@ var Preview = GObject.registerClass({
                     y: 0,
                     reactive: false,
                 });
-                this._highlight.set_style('background-color: rgba(255, 255, 255, 0.3);');
+                this._highlight.set_style(this._getHighlightStyle(0.3));
                 let constraint = Clutter.BindConstraint.new(window_actor, Clutter.BindCoordinate.SIZE, 0);
                 this._highlight.add_constraint(constraint);
                 window_actor.add_actor(this._highlight);
@@ -154,7 +231,6 @@ var Preview = GObject.registerClass({
             }
             if (this._flash == null) {
                 this._flash = new St.Bin({
-                    style_class: 'flashspot',
                     width: 1,
                     height: 1,
                     opacity: 255,
@@ -162,6 +238,7 @@ var Preview = GObject.registerClass({
                     x: 0,
                     y: 0,
                 });
+                this._flash.set_style(this._getHighlightStyle(1));
                 let constraint = Clutter.BindConstraint.new(window_actor, Clutter.BindCoordinate.SIZE, 0);
                 this._flash.add_constraint(constraint);
                 window_actor.add_actor(this._flash);
@@ -182,7 +259,7 @@ var Preview = GObject.registerClass({
         if (crossingEvent.source == null) return Clutter.EVENT_PROPAGATE;
         this.remove_highlight();
         this._entered = false;
-        if (this.switcher._settings.raise_mouse_over) this.switcher._updatePreviews(true, 0);
+        if (this.switcher._settings.raise_mouse_over && !this.switcher._destroying) this.switcher._updatePreviews(true, 0);
         return Clutter.EVENT_PROPAGATE;
     }
 

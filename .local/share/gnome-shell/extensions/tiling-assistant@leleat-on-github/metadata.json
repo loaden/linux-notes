@@ -4,9 +4,10 @@
   "name": "Tiling Assistant",
   "settings-schema": "org.gnome.shell.extensions.tiling-assistant",
   "shell-version": [
-    "43"
+    "43",
+    "44"
   ],
   "url": "https://github.com/Leleat/Tiling-Assistant",
   "uuid": "tiling-assistant@leleat-on-github",
-  "version": 39
+  "version": 45
 }

@@ -5,15 +5,15 @@
   "original-authors": "Kazimieras Vaina, Pierre Ossman, erguille, jonnius, Philipp Wolfer, Mariusz Lisowski, Cristian Beroiza, warmsun0220, Rasmus Kaj, Pablo Martin-Gomez Bouska, Rapha\u00ebl Rochet, Luiz Nickel, Jesse, Du\u0161an Kazik",
   "shell-version": [
     "3.34",
-    "3.32",
     "3.36",
     "3.38",
     "40",
     "41",
     "42",
-    "43"
+    "43",
+    "44"
   ],
   "url": "https://github.com/kazysmaster/gnome-shell-extension-lockkeys",
   "uuid": "lockkeys@vaina.lt",
-  "version": 49
+  "version": 52
 }
