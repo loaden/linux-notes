@@ -1,4 +1,4 @@
-# Arch 核心指南
+# Arch 核心笔记
 
 本指南优先选择 ***Wayland+GNOME*** 配置，x11 或者其他桌面仅供参考。LFS/Gentoo/Arch 相关技术交流请加**QQ群111601117**。
 
@@ -176,12 +176,12 @@
 * 建议`yay`包管理
 
   ```shell
-  $ yay linuxqq #QQ
-  $ yay visual-studio-code #VSCode
-  $ yay dingtalk #钉钉
-  $ yay microsoft-edge #Edge浏览器
-  $ yay anydesk #AnyDesk
-  $ yay wps-office-cn #WPS
+  yay linuxqq #QQ
+  yay visual-studio-code #VSCode
+  yay dingtalk #钉钉
+  yay microsoft-edge #Edge浏览器
+  yay anydesk #AnyDesk
+  yay wps-office-cn #WPS
   ```
 
 * 查询软件包信息 `yay -Ps`

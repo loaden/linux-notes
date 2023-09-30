@@ -1,4 +1,4 @@
-# Gentoo 核心指南
+# Gentoo 核心笔记
 
 本指南优先选择 ***Wayland+Sway*** 配置，x11 或者其他桌面仅供参考。LFS/Gentoo/Arch 相关技术交流请加**QQ群111601117**。
 
@@ -248,9 +248,9 @@
 ### 2. 启用 PulseAudio
 
   ```shell
-  $ systemctl --user enable pulseaudio
-  $ systemctl --user start pulseaudio
-  $ systemctl --user status pulseaudio
+  systemctl --user enable pulseaudio
+  systemctl --user start pulseaudio
+  systemctl --user status pulseaudio
   ```
 
 ### 3. 普通用户授权
@@ -280,9 +280,9 @@
 * 查看字体匹配顺序
 
   ```shell
-  $ fc-match --sort monospace:lang=zh
-  $ fc-match --sort sans:lang=zh
-  $ fc-match --sort serif:lang=zh
+  fc-match --sort monospace:lang=zh
+  fc-match --sort sans:lang=zh
+  fc-match --sort serif:lang=zh
   ```
 
 ## 三、Gentoo 定制内核
