@@ -58,4 +58,8 @@
     },
     "dart.debugExternalPackageLibraries": false,
     "dart.debugSdkLibraries": false,
+
+    // Other
+    "commentTranslate.targetLanguage": "zh-CN",
+    "commentTranslate.source": "Bing",
 }
