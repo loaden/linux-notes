@@ -54,8 +54,7 @@ var TimelineSwitcher = class TimelineSwitcher extends BaseSwitcher {
             y: this.actor.height / 2 + this._settings.offset
         };
 
-        for (let windowActor of global.get_window_actors()) {
-            let metaWin = windowActor.get_meta_window();
+        for (let metaWin of this._windows) {
             let compositor = metaWin.get_compositor_private();
             if (compositor) {
                 let texture = compositor.get_texture();
@@ -100,10 +99,7 @@ var TimelineSwitcher = class TimelineSwitcher extends BaseSwitcher {
 
                 preview.set_pivot_point_placement(Placement.LEFT);
 
-                if (this._windows.includes(metaWin)) {
-                    this._previews[this._windows.indexOf(metaWin)] = preview;
-                }
-                this._allPreviews.push(preview);
+                this._previews.push(preview);
                 this.previewActor.add_actor(preview);
 
                 preview.make_bottom_layer(this.previewActor);
@@ -151,19 +147,15 @@ var TimelineSwitcher = class TimelineSwitcher extends BaseSwitcher {
             });
             return;
         }
- 
-        for (let i = this._currentIndex; i < this._currentIndex + this._previews.length; i++) {
-            this._previews[i%this._previews.length].make_bottom_layer(this.previewActor);
-        }
-        if (reorder_only) return;
+
         // preview windows
         for (let [i, preview] of this._previews.entries()) {
+            preview.make_bottom_layer(this.previewActor);
+            if (reorder_only) continue;
             animation_time = this._settings.animation_time * (this._settings.randomize_animation_times ? this._getRandomArbitrary(0.0001, 1) : 1);
-            if (i == this._currentIndex) animation_time = this._settings.animation_time;
             let distance = (this._currentIndex > i) ? this._previews.length - this._currentIndex + i : i - this._currentIndex;
             if (distance === this._previews.length - 1 && direction > 0) {
                 preview.__looping = true;
-                preview.make_top_layer(this.previewActor);
                 this._manager.platform.tween(preview, {
                     x: preview.target_x + 200,
                     y: preview.target_y + 100,
@@ -184,7 +176,6 @@ var TimelineSwitcher = class TimelineSwitcher extends BaseSwitcher {
                 });
             } else if (distance === 0 && direction < 0) {
                 preview.__looping = true;
-                preview.make_bottom_layer(this.previewActor);
                 this._manager.platform.tween(preview, {
                     time: animation_time / 2,
                     transition: IN_BOUNDS_TRANSITION_TYPE,
@@ -274,13 +265,16 @@ var TimelineSwitcher = class TimelineSwitcher extends BaseSwitcher {
     }
 
     _onFinishMove(preview) {
-        this._updatePreviews(true)
-
         if (preview.__finalTween) {
             for (let tween of preview.__finalTween) {
                 this._manager.platform.tween(preview, tween);
             }
             preview.__finalTween = null;
         }
+    }
+
+    destroy() {
+        this.destroying = true;
+        this._onDestroy(TRANSITION_TYPE);
     }
 };

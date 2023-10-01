@@ -120,17 +120,12 @@ class AbstractPlatform {
             preview_scaling_factor: 0.75,
             bind_to_switch_applications: true,
             bind_to_switch_windows: true,
-            perspective_correction_method: "Move Camera",
+            perspective_correction_method: "None",
             highlight_mouse_over: false,
             raise_mouse_over: true,
+            blur_sigma: 7,
+            desaturation_factor: 0.75,
             switcher_looping_method: 'Flip Stack',
-            switch_application_behaves_like_switch_windows: false,
-            blur_sigma: 4,
-            desaturate_factor: 0.0,
-            tint_color: (0., 0., 0., 0.),
-            use_theme_color_for_tint_color: false,
-            use_glitch_effect: false,
-            use_tint: false,
         };
     }
 
@@ -199,14 +194,9 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             "perspective-correction-method",
             "highlight-mouse-over",
             "raise-mouse-over",
-            "desaturate-factor",
+            "desaturation-factor",
             "blur-sigma",
             "switcher-looping-method",
-            "switch-application-behaves-like-switch-windows",
-            "use-tint",
-            "tint-color",
-            "use-theme-color-for-tint-color",
-            "use-glitch-effect",
         ];
 
         let dkeys = [
@@ -279,7 +269,6 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
         try {
             let settings = this._extensionSettings;
             let dsettings = this._desktopSettings;
-            let tint_color = settings.get_value("tint-color").deep_unpack();
             return {
                 animation_time: settings.get_double("animation-time"),
                 randomize_animation_times: settings.get_boolean("randomize-animation-times"),
@@ -305,14 +294,9 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
                 perspective_correction_method: settings.get_string("perspective-correction-method"),
                 highlight_mouse_over: settings.get_boolean("highlight-mouse-over"),
                 raise_mouse_over: settings.get_boolean("raise-mouse-over"),
-                desaturate_factor: settings.get_double("desaturate-factor") === 1.0 ? 0.999 : settings.get_double("desaturate-factor"),
+                desaturation_factor: settings.get_double("desaturation-factor"),
                 blur_sigma: settings.get_int("blur-sigma"),
                 switcher_looping_method: settings.get_string("switcher-looping-method"),
-                switch_application_behaves_like_switch_windows: settings.get_boolean("switch-application-behaves-like-switch-windows"),
-                tint_color: settings.get_value("tint-color").deep_unpack(),
-                use_theme_color_for_tint_color: settings.get_boolean("use-theme-color-for-tint-color"),
-                use_glitch_effect: settings.get_boolean("use-glitch-effect"),
-                use_tint: settings.get_boolean("use-tint"),
             };
         } catch (e) {
             global.log(e);
@@ -541,14 +525,13 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             opacity: 0,
             onComplete: this._lightbox.lightOff.bind(this._lightbox),
         });
-
     }
 
     removeBackground() {
         Lightbox.VIGNETTE_SHARPNESS = this._vignette_sharpness_backup;
         Lightbox.VIGNETTE_BRIGHTNESS = this._vignette_brigtness_backup;
-        this._backgroundGroup.destroy();
-    }
+        Main.layoutManager.uiGroup.remove_child(this._backgroundGroup);
+	}
 
     getPanels() {
         let panels = [Main.panel];

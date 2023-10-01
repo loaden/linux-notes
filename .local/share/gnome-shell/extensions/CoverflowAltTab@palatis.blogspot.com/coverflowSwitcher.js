@@ -34,8 +34,9 @@ const {
     Direction,
     findUpperLeftFromCenter,
 } = ExtensionImports.preview;
+
 const SIDE_ANGLE = 90;
-const BLEND_OUT_ANGLE = 30;
+const BLEND_OUT_ANGLE = 0;
 const ALPHA = 1;
 
 function appendParams(base, extra) {
@@ -61,8 +62,7 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
         this._xOffsetLeft = this.actor.width * 0.1;
         this._xOffsetRight = this.actor.width - this._xOffsetLeft;
 
-        for (let windowActor of global.get_window_actors()) {
-            let metaWin = windowActor.get_meta_window();
+        for (let metaWin of this._windows) {
             let compositor = metaWin.get_compositor_private();
             if (compositor) {
                 let texture = compositor.get_texture();
@@ -108,24 +108,16 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
                         this._previewsCenterPosition.y)
                 };
 
-                if (this._windows.includes(metaWin)) {
-                    this._previews[this._windows.indexOf(metaWin)] = preview;
-                }
-                this._allPreviews.push(preview);
-                
+                this._previews.push(preview);
                 this.previewActor.add_actor(preview);
             }
         }
     }
 
-    _usingCarousel() {
-        return (this._parent === null && this._settings.switcher_looping_method == "Carousel");
-    }
-
     _previewNext() {
         if (this._currentIndex == this._windows.length - 1) {
             this._currentIndex = 0;
-            if (this._usingCarousel()) {
+            if (this._settings.switcher_looping_method == "Carousel") {
                 this._updatePreviews(false)
             } else {
                 this._flipStack(Direction.TO_LEFT);
@@ -139,7 +131,7 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
     _previewPrevious() {
         if (this._currentIndex == 0) {
             this._currentIndex = this._windows.length-1;
-            if (this._usingCarousel()) {
+            if (this._settings.switcher_looping_method == "Carousel") {
                 this._updatePreviews(false)
             } else {
                 this._flipStack(Direction.TO_RIGHT);
@@ -238,12 +230,14 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
                 appendParams(extraParams, lastExtraParams);
             this._animatePreviewToSide(preview, index, xOffsetEnd, extraParams);
         }
-        super._updatePreviews();
     }
 
     _onFlipComplete(direction) {
         this._looping = false;
-        this._updatePreviews(false);
+        if (this._requiresUpdate === true) {
+            this._requiresUpdate = false;
+            this._updatePreviews(false);
+        }
     }
 
     // TODO: Remove unused direction variable
@@ -269,7 +263,7 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
         let [x, y] = preview.get_pivot_point();
         let pivot_point = new Graphene.Point({ x: x, y: y });
         let half_length = Math.floor(this._previews.length / 2);
-        let pivot_index = (this._usingCarousel()) ?
+        let pivot_index = (this._settings.switcher_looping_method == "Carousel") ?
                            half_length : this._currentIndex; 
         if (toChangePivotPoint) {
             if (index < pivot_index) {
@@ -315,13 +309,13 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
             }
         } else if (this.num_monitors == 3) {
             if (this.monitor_number == this.monitors_ltr[0].index) {
-                if (side == 0) return (666)/1000 * 90;
-                else return 750/1000 * 90;
+                if (side == 0) return (644)/1000 * 90;
+                else return 815/1000 * 90;
             } else if (this.monitor_number == this.monitors_ltr[1].index) {
                 return 0;
             } else {
-                if (side == 0) return (-750)/1000 * 90;
-                else return -666/1000 * 90;
+                if (side == 0) return (-815)/1000 * 90;
+                else return -644/1000 * 90;
             }
         }
     }
@@ -338,25 +332,21 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
         let previews = [];
         let half_length = Math.floor(this._previews.length / 2);
         for (let [i, preview] of this._previews.entries()) {
-            let idx = (this._usingCarousel()) ?
+            let idx = (this._settings.switcher_looping_method == "Carousel") ?
              (i - this._currentIndex + half_length + this._previews.length) % this._previews.length :
              i;
             previews.push([i, idx, preview]);
         }
         previews.sort((a, b) => a[1] - b[1]);
         
-        let pivot_index = (this._usingCarousel()) ?
+        let pivot_index = (this._settings.switcher_looping_method == "Carousel") ?
          half_length : this._currentIndex;
 
-        let zeroIndexPreview = null;
         for (let item of previews) {
             let preview = item[2]; 
             let i = item[0];
             let idx = item[1];
             let animation_time = this._settings.animation_time * (this._settings.randomize_animation_times ? this._getRandomArbitrary(0.0001, 1) : 1);
-            if (this._usingCarousel() && idx == 0) {
-                zeroIndexPreview = preview;
-            }
             if (i == this._currentIndex) {
                 preview.make_top_layer(this.previewActor);
                 if (!reorder_only) {
@@ -390,7 +380,5 @@ var CoverflowSwitcher = class CoverflowSwitcher extends BaseSwitcher {
                 }
             });
         }
-        if (zeroIndexPreview != null) zeroIndexPreview.make_bottom_layer(this.previewActor);
-        super._updatePreviews();
     }
 };
