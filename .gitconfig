@@ -8,5 +8,6 @@
 	spellingdictionary = en
 [pull]
 	rebase = false
-[remote "origin"]
-	proxy =
+[http]
+	proxy = 127.0.0.1:26501
+	sslverify = false
