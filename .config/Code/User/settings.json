@@ -5,20 +5,20 @@
     "editor.fontSize": 16,
     "editor.formatOnPaste": true,
     "editor.guides.bracketPairs": true,
-    "editor.minimap.enabled": true,
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "extensions.ignoreRecommendations": true,
 
     // 自动修复
     "editor.codeActionsOnSave": {
-        "source.fixAll": true
+        "source.fixAll": "explicit"
     },
 
     // Git
     "git.autofetch": true,
     "git.confirmSync": false,
     "git.enableSmartCommit": true,
+    "githd.logView.displayExpressStatus": false,
 
     // LaTeX
     "latex-workshop.view.pdf.viewer": "browser",
@@ -54,12 +54,16 @@
         "editor.suggest.snippetsPreventQuickSuggestions": false,
         "editor.suggestSelection": "first",
         "editor.tabCompletion": "onlySnippets",
-        "editor.wordBasedSuggestions": false
+        "editor.wordBasedSuggestions": "off"
     },
     "dart.debugExternalPackageLibraries": false,
     "dart.debugSdkLibraries": false,
 
-    // Other
-    "commentTranslate.targetLanguage": "zh-CN",
+    // 翻译
     "commentTranslate.source": "Bing",
+    "commentTranslate.hover.content": false,
+    "commentTranslate.hover.string": true,
+    "diffEditor.useInlineViewWhenSpaceIsLimited": false,
+    "editor.minimap.enabled": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
 }

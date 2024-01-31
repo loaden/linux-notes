@@ -66,6 +66,7 @@
   ```text
   ACCEPT_LICENSE="*"
   GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
+  USE="wayland"
   ```
 
 * systemd 初始化
@@ -157,7 +158,7 @@
 * [顶栏](.config/waybar/)
 
   ```shell
-  # euse -p gui-apps/waybar network pulseaudio tray wifi
+  # euse -p gui-apps/waybar -E network pulseaudio tray wifi
   # emerge -av --autounmask waybar
   # dispatch-conf
   # emerge -av --autounmask =fontawesome-6.1.1
@@ -212,9 +213,9 @@
   ```
 
 * 文件管理器
-  > `# emerge -av thunar`
+  > `# emerge -av thunar thunar-archive-plugin thunar-volman tumbler xarchiver`
 * 文本编辑器
-  > `# emerge -av mousepad`
+  > `# emerge -av leafpad`
 * 视频播放器
   > `# emerge -av mpv`
 * 音乐播放器
@@ -335,7 +336,7 @@
 
   ```shell
   # emerge -av1 xdg-user-dirs
-  # xdg-user-dirs-update --force
+  $ xdg-user-dirs-update --force
   ```
 
 ### 2. 清理未完成的安装任务
@@ -352,3 +353,8 @@
 ### 4. 恢复编译
 
   > `# emerge --resume`
+
+### 5. Thunar 右键终端
+
+当提示错误`无法启动类别“TerminalEmulator”的首选应用程序。`时，可以修改[配置文件](.config/xfce4/helpers.rc)，添加内容：
+  > TerminalEmulator=foot

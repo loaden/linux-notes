@@ -250,8 +250,8 @@ bar {
 
 
 # 输入法
-# exec_always fcitx5 -d --replace
-exec_always ibus-daemon -drx
+# exec_always ibus-daemon -drx
+exec_always fcitx5 -d --replace
 
 # 密码验证
 exec_always /usr/libexec/polkit-gnome-authentication-agent-1
@@ -303,6 +303,8 @@ for_window [title="文件操作进度"] floating enable, resize set width 30 ppt
 for_window [title="创建新归档文件"] floating enable
 for_window [app_id="qt5ct"] floating enable, sticky enable
 for_window [title="DING"] floating enable
+for_window [title="ibus-ui-gtk3"] floating enable
+for_window [title="确认替换文件"] floating enable
 
 # 截图
 bindsym $mod+shift+g exec grim -g "$(slurp)" - | wl-copy && notify-send "截图到剪贴板"
