@@ -321,7 +321,7 @@
   >
   > `# equery list glibc`
 
-## 四、平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
+## 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
 ### [桌面](.config/sway/)
   >
