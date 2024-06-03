@@ -2,13 +2,13 @@
 
 本指南优先选择 ***Wayland+GNOME*** 配置，x11 或者其他桌面仅供参考。LFS/Gentoo/Arch 相关技术交流请加**QQ群111601117**。
 
-## 一、Arch 安装要点
+## Arch 安装要点
 
-### 1. 遵循官方维基指南
+### 遵循官方维基指南
 
   > <https://wiki.archlinux.org/title/Installation_guide>
 
-### 2. 联网
+### 联网
 
 * 查看网卡信息 `# ip link`
 * 有线网络尽量自动获取地址
@@ -23,11 +23,11 @@
   [iwd]# station wlan0 show
   ```
 
-### 3. 检查时间
+### 检查时间
 
 > `# timedatectl status`
 
-### 4. 分区
+### 分区
 
 * 推荐分区工具 [parted](https://wiki.archlinux.org/title/Parted)
 * 查看分区
@@ -45,11 +45,11 @@
 * 建议家目录单独分区，不建议使用 *swap* 分区
 * 推荐使用 *[btrfs](https://wiki.archlinux.org/title/Btrfs)* 文件系统
 
-### 5. 优选国内源
+### 优选国内源
 
 > `reflector -c china -p https,http --fastest 5 --connection-timeout 2 --sort rate --save /etc/pacman.d/mirrorlist`
 
-### 6. 安装系统
+### 安装系统
 
 * 基础系统与桌面
   > `pacstrap -K /mnt base linux linux-firmware grub efibootmgr sudo nano networkmanager gnome bash-completion`
@@ -109,9 +109,9 @@
 * 实用工具 *[可选]*
   > `# pacman -S fakeroot patch ed git`
 
-## 二、Arch 技巧总结
+## Arch 技巧总结
 
-### 1. 启用archlinuxcn二进制源
+### 启用archlinuxcn二进制源
 
 * 修改配置文件
   > `# nano /etc/pacman.conf`
@@ -133,7 +133,7 @@
 * 安装AUR包管理yay
   > `# pacman -S yay`
 
-### 2. 安装中文输入法
+### 安装中文输入法
 
 * 安装 ibus-rime
   > `# pacman -S ibus-rime`
@@ -152,7 +152,7 @@
 * 文档
   > <https://wiki.archlinux.org/title/IBus>
 
-### 3. 添加用户扩展
+### 添加用户扩展
 
 * 拷贝[推荐扩展](.local/share/gnome-shell/extensions)到相应目录
   > .local/share/gnome-shell/extensions
@@ -160,7 +160,7 @@
 * 更多扩展
   > <https://extensions.gnome.org>
 
-### 4. 系统商店 “软件”
+### 系统商店 “软件”
 
 * 首先设置 Flatpak 国内软件源[加速](.bin/flatpak-config.sh)
   > <https://mirrors.sjtug.sjtu.edu.cn/docs/flathub>
@@ -168,7 +168,7 @@
   > `# pacman -S gnome-software-packagekit-plugin`
 * 请耐心等待加载页面，之后考虑关闭 Flatpak 软件源
 
-### 5. 用户商店 “AUR”
+### 用户商店 “AUR”
 
 * 建议在线精准搜索
   > <https://aur.archlinux.org>
@@ -189,7 +189,7 @@
 * `yay` 缓存路径
   > ~/.cache/yay
 
-### 6. 触控手势
+### 触控手势
 
 * 项目地址
   > <https://github.com/bulletmark/libinput-gestures>
@@ -213,7 +213,7 @@
   gesture pinch out xdotool key ctrl+plus
   ```
 
-### 7. Snapper 备份还原
+### Snapper 备份还原
 
 * 安装
   > `# pacman -S snapper`
@@ -234,7 +234,7 @@
 * 还原
   > `$ snapper undochange 1..0`
 
-### 8. 电源管理（INTEL）
+### 电源管理（INTEL）
 
 * 安装电源管理服务
   > `# pacman -S thermald`
