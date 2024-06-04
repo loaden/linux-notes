@@ -338,9 +338,11 @@
 ### 常用软件
 
   ```shell
-  # emerge -av microsoft-edge
+  # emerge -avg microsoft-edge
   # emerge -avg gnome-text-editor
-  # emerge -av vscode
+  # emerge -avg vscode
+  # emerge -avg tencent-qq --autounmask
+  # emerge -avg dingtalk --autounmask
   ```
 
 ## Gentoo 技巧总结
