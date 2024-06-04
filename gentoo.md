@@ -326,6 +326,15 @@
   fc-match --sort serif:lang=zh
   ```
 
+### 输入法
+
+  ```shell
+  # emerge -avg ibus-rime --autounmask
+  # dispatch-conf
+  ```
+
+* 注销电脑，之后：设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
+
 ### 常用软件
 
   ```shell
