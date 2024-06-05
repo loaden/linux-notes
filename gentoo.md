@@ -335,15 +335,36 @@
 
 * 注销电脑，之后：设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
 
+### 科学上网
+
+  ```shell
+  # # emerge -avg cloudflare-warp --autounmask
+  # dispatch-conf
+  ```
+
+* 启动服务
+
+  ```shell
+  # systemctl enable --now warp-svc.service
+  $ systemctl --user enable --now warp-taskbar.service
+  ```
+
+### GNOME组件补充
+
+  ```shell
+  # emerge -avg gnome-text-editor
+  # emerge -avg gnome-calculator
+  # emerge -avg evince
+  ```
+
 ### 常用软件
 
   ```shell
   # emerge -avg microsoft-edge
-  # emerge -avg gnome-text-editor
   # emerge -avg vscode
-  # emerge -avg cloudflare-warp --autounmask
   # emerge -avg tencent-qq --autounmask
   # emerge -avg dingtalk --autounmask
+  # emerge -avg obs-studio --autounmask
   ```
 
 ## Gentoo 技巧总结
