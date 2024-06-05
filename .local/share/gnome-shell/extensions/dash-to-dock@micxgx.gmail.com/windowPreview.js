@@ -5,29 +5,26 @@
  * Some code was also adapted from the upstream Gnome Shell source code.
  */
 
-/* exported WindowPreviewMenu */
-
-const {
+import {
     Clutter,
     GLib,
     GObject,
     Meta,
     St,
-} = imports.gi;
+} from './dependencies/gi.js';
 
-const {
-    boxpointer: BoxPointer,
-    main: Main,
-    popupMenu: PopupMenu,
-    workspace: Workspace,
-} = imports.ui;
+import {
+    BoxPointer,
+    Main,
+    PopupMenu,
+    Workspace,
+} from './dependencies/shell/ui.js';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const {
-    docking: Docking,
-    theming: Theming,
-    utils: Utils,
-} = Me.imports;
+import {
+    Docking,
+    Theming,
+    Utils,
+} from './imports.js';
 
 const PREVIEW_MAX_WIDTH = 250;
 const PREVIEW_MAX_HEIGHT = 150;
@@ -37,7 +34,7 @@ const MAX_PREVIEW_GENERATION_ATTEMPTS = 15;
 
 const MENU_MARGINS = 10;
 
-var WindowPreviewMenu = class DashToDockWindowPreviewMenu extends PopupMenu.PopupMenu {
+export class WindowPreviewMenu extends PopupMenu.PopupMenu {
     constructor(source) {
         super(source, 0.5, Utils.getPosition());
 
@@ -48,7 +45,7 @@ var WindowPreviewMenu = class DashToDockWindowPreviewMenu extends PopupMenu.Popu
         this._app = this._source.app;
         const workArea = Main.layoutManager.getWorkAreaForMonitor(
             this._source.monitorIndex);
-        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+        const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
 
         this.actor.add_style_class_name('app-menu');
         this.actor.set_style(
@@ -63,7 +60,7 @@ var WindowPreviewMenu = class DashToDockWindowPreviewMenu extends PopupMenu.Popu
         });
         this._destroyId = this._source.connect('destroy', this.destroy.bind(this));
 
-        Main.uiGroup.add_actor(this.actor);
+        Utils.addActor(Main.uiGroup, this.actor);
 
         this.connect('destroy', this._onDestroy.bind(this));
     }
@@ -93,9 +90,9 @@ var WindowPreviewMenu = class DashToDockWindowPreviewMenu extends PopupMenu.Popu
         if (this._destroyId)
             this._source.disconnect(this._destroyId);
     }
-};
+}
 
-var WindowPreviewList = class DashToDockWindowPreviewList extends PopupMenu.PopupMenuSection {
+class WindowPreviewList extends PopupMenu.PopupMenuSection {
     constructor(source) {
         super();
         this.actor = new St.ScrollView({
@@ -112,7 +109,7 @@ var WindowPreviewList = class DashToDockWindowPreviewList extends PopupMenu.Popu
         this.isHorizontal = position === St.Side.BOTTOM || position === St.Side.TOP;
         this.box.set_vertical(!this.isHorizontal);
         this.box.set_name('dashtodockWindowList');
-        this.actor.add_actor(this.box);
+        Utils.addActor(this.actor, this.box);
         this.actor._delegate = this;
 
         this._shownInitially = false;
@@ -323,9 +320,9 @@ var WindowPreviewList = class DashToDockWindowPreviewList extends PopupMenu.Popu
             return result || actor.animatingOut;
         }, false);
     }
-};
+}
 
-var WindowPreviewMenuItem = GObject.registerClass(
+export const WindowPreviewMenuItem = GObject.registerClass(
 class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(window, position, params) {
         super._init(params);
@@ -335,7 +332,7 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this._windowAddedId = 0;
 
         // We don't want this: it adds spacing on the left of the item.
-        this.remove_child(this._ornamentLabel);
+        this.remove_child(this._ornamentIcon);
         this.add_style_class_name('dashtodock-app-well-preview-menu-item');
         this.add_style_class_name(Theming.PositionStyleClass[position]);
         if (Docking.DockManager.settings.customThemeShrink)
@@ -362,7 +359,7 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
                 ? Clutter.ActorAlign.START : Clutter.ActorAlign.END,
             y_align: Clutter.ActorAlign.START,
         });
-        this.closeButton.add_actor(new St.Icon({ icon_name: 'window-close-symbolic' }));
+        Utils.addActor(this.closeButton, new St.Icon({icon_name: 'window-close-symbolic'}));
         this.closeButton.connect('clicked', () => this._closeWindow());
 
         const overlayGroup = new Clutter.Actor({
@@ -370,25 +367,35 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
             y_expand: true,
         });
 
-        overlayGroup.add_actor(this._cloneBin);
-        overlayGroup.add_actor(this.closeButton);
+        overlayGroup.add_child(this._cloneBin);
+        overlayGroup.add_child(this.closeButton);
 
-        const label = new St.Label({ text: window.get_title() });
+        const label = new St.Label({text: window.get_title()});
         label.set_style(`max-width: ${PREVIEW_MAX_WIDTH}px`);
-        const labelBin = new St.Bin({ child: label,
-            x_align: Clutter.ActorAlign.CENTER });
+        const labelBin = new St.Bin({
+            child: label,
+            x_align: Clutter.ActorAlign.CENTER,
+        });
 
         this._windowTitleId = this._window.connect('notify::title', () => {
             label.set_text(this._window.get_title());
         });
 
-        const box = new St.BoxLayout({ vertical: true,
+        const box = new St.BoxLayout({
+            vertical: true,
             reactive: true,
-            x_expand: true });
-        box.add(overlayGroup);
-        box.add(labelBin);
+            x_expand: true,
+        });
+
+        if (box.add) {
+            box.add(overlayGroup);
+            box.add(labelBin);
+        } else {
+            box.add_child(overlayGroup);
+            box.add_child(labelBin);
+        }
         this._box = box;
-        this.add_actor(box);
+        this.add_child(box);
 
         this._cloneTexture(window);
 
@@ -406,7 +413,7 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         let [minHeight, naturalHeight] = this._box.get_preferred_height(naturalWidth);
         [minWidth, naturalWidth] = themeNode.adjust_preferred_width(minWidth, naturalWidth);
         [minHeight, naturalHeight] = themeNode.adjust_preferred_height(minHeight, naturalHeight);
-        this.set({ minWidth, naturalWidth, minHeight, naturalHeight });
+        this.set({minWidth, naturalWidth, minHeight, naturalHeight});
     }
 
     _getWindowPreviewSize() {
@@ -420,7 +427,7 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         if (!width || !height)
             return emptySize;
 
-        let { previewSizeScale: scale } = Docking.DockManager.settings;
+        let {previewSizeScale: scale} = Docking.DockManager.settings;
         if (!scale) {
             // a simple example with 1680x1050:
             // * 250/1680 = 0,1488
@@ -464,10 +471,12 @@ class WindowPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         }
 
         const mutterWindow = metaWin.get_compositor_private();
-        const clone = new Clutter.Clone({ source: mutterWindow,
+        const clone = new Clutter.Clone({
+            source: mutterWindow,
             reactive: true,
             width: this._width * this._scale,
-            height: this._height * this._scale });
+            height: this._height * this._scale,
+        });
 
         // when the source actor is destroyed, i.e. the window closed, first destroy the clone
         // and then destroy the menu item (do this animating out)

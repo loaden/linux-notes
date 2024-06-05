@@ -22,20 +22,17 @@
  * Originally, created to be helper classes to handle the different keybinding APIs.
  */
 
-const Main = imports.ui.main;
-const Meta = imports.gi.Meta;
-const Config = imports.misc.config;
+import Shell from 'gi://Shell';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const ExtensionImports = imports.misc.extensionUtils.getCurrentExtension().imports;
-
-const {__ABSTRACT_METHOD__} = ExtensionImports.lib;
+import {__ABSTRACT_METHOD__} from './lib.js'
 
 class AbstractKeybinder {
     enable() { __ABSTRACT_METHOD__(this, this.enable) }
     disable() { __ABSTRACT_METHOD__(this, this.disable) }
 }
 
-var Keybinder330Api = class Keybinder330Api extends AbstractKeybinder {
+export const Keybinder330Api = class Keybinder330Api extends AbstractKeybinder {
     constructor(...args) {
         super(...args);
 
@@ -43,7 +40,6 @@ var Keybinder330Api = class Keybinder330Api extends AbstractKeybinder {
     }
 
     enable(startAppSwitcherBind, platform) {
-        let Shell = imports.gi.Shell;
         let mode = Shell.ActionMode ? Shell.ActionMode : Shell.KeyBindingMode;
 
         this._startAppSwitcherBind = startAppSwitcherBind;
@@ -55,7 +51,6 @@ var Keybinder330Api = class Keybinder330Api extends AbstractKeybinder {
     }
 
     disable() {
-        let Shell = imports.gi.Shell;
         let mode = Shell.ActionMode ? Shell.ActionMode : Shell.KeyBindingMode;
         Main.wm.setCustomKeybindingHandler('switch-applications', mode.NORMAL, Main.wm._startSwitcher.bind(Main.wm));
         Main.wm.setCustomKeybindingHandler('switch-windows', mode.NORMAL, Main.wm._startSwitcher.bind(Main.wm));
@@ -66,7 +61,6 @@ var Keybinder330Api = class Keybinder330Api extends AbstractKeybinder {
     }
 
     _onSettingsChanged(settings, key=null) {
-        let Shell = imports.gi.Shell;
         let mode = Shell.ActionMode ? Shell.ActionMode : Shell.KeyBindingMode;
         if (key == null || key == 'bind-to-switch-applications') {
             if (settings.get_boolean('bind-to-switch-applications')) {

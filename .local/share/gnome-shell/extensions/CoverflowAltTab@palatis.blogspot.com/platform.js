@@ -23,25 +23,24 @@
  * Originally, created to be helper classes to handle Gnome Shell and Cinnamon differences.
  */
 
-const St = imports.gi.St;
-const Gio = imports.gi.Gio;
-const Config = imports.misc.config;
-const Main = imports.ui.main;
-const Meta = imports.gi.Meta;
-const Clutter = imports.gi.Clutter;
-const Lightbox = imports.ui.lightbox;
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
+import Shell from 'gi://Shell';
+import GLib from 'gi://GLib';
 
-const ExtensionImports = imports.misc.extensionUtils.getCurrentExtension().imports;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Background from 'resource:///org/gnome/shell/ui/background.js';
+import {__ABSTRACT_METHOD__} from './lib.js'
 
-const {__ABSTRACT_METHOD__} = ExtensionImports.lib;
-
-const {Switcher} = ExtensionImports.switcher;
-const {CoverflowSwitcher} = ExtensionImports.coverflowSwitcher;
-const {TimelineSwitcher} = ExtensionImports.timelineSwitcher;
+import {Switcher} from './switcher.js';
+import {CoverflowSwitcher} from './coverflowSwitcher.js';
+import {TimelineSwitcher} from './timelineSwitcher.js';
 
 const POSITION_TOP = 1;
 const POSITION_BOTTOM = 7;
-const SHELL_SCHEMA = "org.gnome.shell.extensions.coverflowalttab";
 const DESKTOP_INTERFACE_SCHEMA = 'org.gnome.desktop.interface';
 const KEY_TEXT_SCALING_FACTOR = 'text-scaling-factor';
 
@@ -106,7 +105,6 @@ class AbstractPlatform {
             title_position: POSITION_BOTTOM,
             icon_style: 'Classic',
             icon_has_shadow: false,
-            overlay_icon_size: 128,
             overlay_icon_opacity: 1,
             text_scaling_factor: 1,
             offset: 0,
@@ -120,19 +118,27 @@ class AbstractPlatform {
             preview_scaling_factor: 0.75,
             bind_to_switch_applications: true,
             bind_to_switch_windows: true,
-            perspective_correction_method: "None",
+            perspective_correction_method: "Move Camera",
             highlight_mouse_over: false,
             raise_mouse_over: true,
-            blur_sigma: 7,
-            desaturation_factor: 0.75,
             switcher_looping_method: 'Flip Stack',
+            switch_application_behaves_like_switch_windows: false,
+            blur_sigma: 4,
+            desaturate_factor: 0.0,
+            tint_color: (0., 0., 0.),
+            switcher_background_color: (0., 0., 0.),
+            tint_blend: 0.0,
+            use_glitch_effect: false,
+            use_tint: false,
+            invert_swipes: false,
+            overlay_icon_size: 128,
         };
     }
 
     initBackground() {
     	this._background = Meta.BackgroundActor.new_for_screen(global.screen);
 		this._background.hide();
-        global.overlay_group.add_actor(this._background);
+        global.overlay_group.add_child(this._background);
     }
 
     dimBackground() {
@@ -145,28 +151,48 @@ class AbstractPlatform {
     }
 
     removeBackground() {
-    	global.overlay_group.remove_actor(this._background);
+    	global.overlay_group.remove_child(this._background);
     }
 }
 
-var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
-    constructor(...args) {
+export class PlatformGnomeShell extends AbstractPlatform {
+    constructor(settings, ...args) {
         super(...args);
 
         this._settings = null;
         this._connections = null;
-        this._extensionSettings = null;
+        this._extensionSettings = settings;
         this._desktopSettings = null;
+        this._backgroundColor = null;
         this._settings_changed_callbacks = null;
+        this._themeContext = null;
     }
 
+    _getSwitcherBackgroundColor() {
+        if (this._backgroundColor === null) {
+            let widgetClass = this.getWidgetClass();
+            let parent = new widgetClass({ visible: false, reactive: false, style_class: 'switcher-list'});
+            let actor = new widgetClass({ visible: false, reactive: false, style_class: 'item-box' });
+            parent.add_child(actor);
+            actor.add_style_pseudo_class('selected');
+            Main.uiGroup.add_child(parent);
+            this._backgroundColor = actor.get_theme_node().get_background_color();
+            Main.uiGroup.remove_child(parent);
+            parent = null;
+            let color = new GLib.Variant("(ddd)", [this._backgroundColor.red/255, this._backgroundColor.green/255, this._backgroundColor.blue/255]);
+            this._extensionSettings.set_value("switcher-background-color", color);
+        }
+        return this._backgroundColor;
+    }
+    
     enable() {
-        //this.disable();
+        this._themeContext = St.ThemeContext.get_for_stage(global.stage);
+        this._themeContextChangedID = this._themeContext.connect("changed", (themeContext) => {
+            this._backgroundColor = null;
+            this._getSwitcherBackgroundColor();
+        });
 
         this._settings_changed_callbacks = [];
-
-        if (this._extensionSettings == null)
-            this._extensionSettings = ExtensionImports.lib.getSettings(SHELL_SCHEMA);
 
         if (this._desktopSettings == null)
             this._desktopSettings = new Gio.Settings({ schema_id: DESKTOP_INTERFACE_SCHEMA });
@@ -194,9 +220,16 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             "perspective-correction-method",
             "highlight-mouse-over",
             "raise-mouse-over",
-            "desaturation-factor",
+            "desaturate-factor",
             "blur-sigma",
             "switcher-looping-method",
+            "switch-application-behaves-like-switch-windows",
+            "use-tint",
+            "tint-color",
+            "tint-blend",
+            "switcher-background-color",
+            "use-glitch-effect",
+            "invert-swipes",
         ];
 
         let dkeys = [
@@ -219,6 +252,7 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
     }
 
     disable() {
+        this.showPanels(0);
         if (this._connections) {
             for (let connection of this._connections) {
                 this._extensionSettings.disconnect(connection);
@@ -230,6 +264,9 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
                 this._desktopSettings.disconnect(dconnection);
             }
         }
+        this._themeContext.disconnect(this._themeContextChangedID);
+        this._themeContext = null;
+
         this._settings = null;
     }
 
@@ -238,11 +275,19 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
     }
 
     getWindowTracker() {
-        return imports.gi.Shell.WindowTracker.get_default();
+        return Shell.WindowTracker.get_default();
     }
 
     getPrimaryModifier(mask) {
-        return imports.ui.switcherPopup.primaryModifier(mask);
+        if (mask === 0)
+            return 0;
+    
+        let primary = 1;
+        while (mask > 1) {
+            mask >>= 1;
+            primary <<= 1;
+        }
+        return primary;
     }
 
     getSettings() {
@@ -269,14 +314,15 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
         try {
             let settings = this._extensionSettings;
             let dsettings = this._desktopSettings;
+
             return {
                 animation_time: settings.get_double("animation-time"),
                 randomize_animation_times: settings.get_boolean("randomize-animation-times"),
                 dim_factor: clamp(settings.get_double("dim-factor"), 0, 1),
                 title_position: (settings.get_string("position") == 'Top' ? POSITION_TOP : POSITION_BOTTOM),
-                icon_style: (settings.get_string("icon-style") == 'Overlay' ? 'Overlay' : 'Classic'),
+                icon_style: (settings.get_string("icon-style")),
                 icon_has_shadow: settings.get_boolean("icon-has-shadow"),
-                overlay_icon_size: clamp(settings.get_double("overlay-icon-size"), 0, 1024),
+                overlay_icon_size: clamp(settings.get_double("overlay-icon-size"), 16, 1024),
                 overlay_icon_opacity: clamp(settings.get_double("overlay-icon-opacity"), 0, 1),
                 text_scaling_factor: dsettings.get_double(KEY_TEXT_SCALING_FACTOR),
                 offset: settings.get_int("offset"),
@@ -294,9 +340,16 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
                 perspective_correction_method: settings.get_string("perspective-correction-method"),
                 highlight_mouse_over: settings.get_boolean("highlight-mouse-over"),
                 raise_mouse_over: settings.get_boolean("raise-mouse-over"),
-                desaturation_factor: settings.get_double("desaturation-factor"),
+                desaturate_factor: settings.get_double("desaturate-factor") === 1.0 ? 0.999 : settings.get_double("desaturate-factor"),
                 blur_sigma: settings.get_int("blur-sigma"),
                 switcher_looping_method: settings.get_string("switcher-looping-method"),
+                switch_application_behaves_like_switch_windows: settings.get_boolean("switch-application-behaves-like-switch-windows"),
+                tint_color: settings.get_value("tint-color").deep_unpack(),
+                tint_blend: settings.get_double("tint-blend"),
+                switcher_background_color: settings.get_value("switcher-background-color").deep_unpack(),
+                use_glitch_effect: settings.get_boolean("use-glitch-effect"),
+                use_tint: settings.get_boolean("use-tint"),
+                invert_swipes: settings.get_boolean("invert-swipes"),
             };
         } catch (e) {
             global.log(e);
@@ -340,7 +393,7 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
         } else if (params.transition == 'userChoice' && this.getSettings().easing_function == "ease-in-quad" ||
             params.transition == 'easeInQuad') {
             params.mode = Clutter.AnimationMode.EASE_IN_QUAD;
-        } else if (params.transition == 'userChoice' && this.getSettings().easing_function == "ease-out_quad" ||
+        } else if (params.transition == 'userChoice' && this.getSettings().easing_function == "ease-out-quad" ||
             params.transition == 'easeOutQuad') {
             params.mode = Clutter.AnimationMode.EASE_OUT_QUAD;
         } else if (params.transition == 'userChoice' && this.getSettings().easing_function == "ease-in-out-quad" ||
@@ -404,7 +457,7 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             params.transition == 'easeLinear') {
             params.mode = Clutter.AnimationMode.LINEAR;
         } else {
-            global.log("Could not find Clutter AnimationMode", params.transition, this.getSettings().easing_function);
+            log("Could not find Clutter AnimationMode", params.transition, this.getSettings().easing_function);
         }
 
         if (params.onComplete) {
@@ -425,14 +478,6 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
     }
 
     initBackground() {
-        this._vignette_sharpness_backup = Lightbox.VIGNETTE_SHARPNESS;
-        this._vignette_brigtness_backup = Lightbox.VIGNETTE_BRIGHTNESS;
-
-        Lightbox.VIGNETTE_SHARPNESS = 1 - this._settings.dim_factor;
-        Lightbox.VIGNETTE_BRIGHTNESS = 1;
-
-    	let Background = imports.ui.background;
-
     	this._backgroundGroup = new Meta.BackgroundGroup();
         Main.layoutManager.uiGroup.add_child(this._backgroundGroup);
     	if (this._backgroundGroup.lower_bottom) {
@@ -440,11 +485,25 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
         } else {
 	        Main.uiGroup.set_child_below_sibling(this._backgroundGroup, null);
         }
-         this._lightbox = new Lightbox.Lightbox(this._backgroundGroup, {
-             inhibitEvents: true,
-             radialEffect: true,
+        
+        this._backgroundShade = new Clutter.Actor({ 
+            opacity: 0, 
+            reactive: false
         });
-        this._lightbox.opacity = 0;
+
+        let constraint = Clutter.BindConstraint.new(this._backgroundGroup,
+            Clutter.BindCoordinate.ALL, 0);
+        this._backgroundShade.add_constraint(constraint);
+
+        let shade = new MyRadialShaderEffect({name: 'shade'});
+        shade.brightness = 1;
+        shade.sharpness = this._settings.dim_factor;
+
+        this._backgroundShade.add_effect(shade);
+        
+        this._backgroundGroup.add_child(this._backgroundShade);
+        this._backgroundGroup.set_child_above_sibling(this._backgroundShade, null);
+    
         this._backgroundGroup.hide();
         for (let i = 0; i < Main.layoutManager.monitors.length; i++) {
             new Background.BackgroundManager({
@@ -455,25 +514,28 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
         }
     }
 
-     dimBackground() {
+    hidePanels() {
         let panels = this.getPanels();
         for (let panel of panels) {
             try {
                 let panelActor = (panel instanceof Clutter.Actor) ? panel : panel.actor;
                 panelActor.set_reactive(false);
-                if (this._settings.hide_panel) {
-                    this.tween(panelActor, {
-                        opacity: 0,
-                        time: this._settings.animation_time,
-                        transition: 'easeInOutQuint'
-                    });
-                }
+                this.tween(panelActor, {
+                    opacity: 0,
+                    time: this._settings.animation_time,
+                    transition: 'easeInOutQuint'
+                });
             } catch (e) {
                 log(e);
                 // ignore fake panels
             }
         }
+    }
 
+     dimBackground() {
+        if (this._settings.hide_panel) {
+            this.hidePanels();
+        }
         // hide gnome-shell legacy tray
         try {
             if (Main.legacyTray) {
@@ -483,15 +545,14 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             // ignore missing legacy tray
         }
         this._backgroundGroup.show();
-        this._lightbox.lightOn();
-        this.tween(this._lightbox, {
+        this.tween(this._backgroundShade, {
             opacity: 255,
             time: this._settings.animation_time,
             transition: 'easeInOutQuint',
         });
     }
 
-    lightenBackground() {
+    showPanels(time) {
         // panels
         let panels = this.getPanels();
         for (let panel of panels){
@@ -502,13 +563,19 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
                     this.removeTweens(panelActor);
                     this.tween(panelActor, {
                         opacity: 255,
-                        time: this._settings.animation_time,
+                        time: time,
                         transition: 'easeInOutQuint'
                     });
                 }
             } catch (e) {
                 //ignore fake panels
             }
+        }
+    }
+
+    lightenBackground() {
+        if (this._settings.hide_panel) {
+            this.showPanels(this._settings.animation_time);
         }
         // show gnome-shell legacy trayconn
         try {
@@ -519,19 +586,17 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
             //ignore missing legacy tray
         }
 
-        this.tween(this._lightbox, {
+        this.tween(this._backgroundShade, {
             time: this._settings.animation_time * 0.95,
             transition: 'easeInOutQuint',
             opacity: 0,
-            onComplete: this._lightbox.lightOff.bind(this._lightbox),
         });
+
     }
 
     removeBackground() {
-        Lightbox.VIGNETTE_SHARPNESS = this._vignette_sharpness_backup;
-        Lightbox.VIGNETTE_BRIGHTNESS = this._vignette_brigtness_backup;
-        Main.layoutManager.uiGroup.remove_child(this._backgroundGroup);
-	}
+        this._backgroundGroup.destroy();
+    }
 
     getPanels() {
         let panels = [Main.panel];
@@ -545,3 +610,76 @@ var PlatformGnomeShell = class PlatformGnomeShell extends AbstractPlatform {
 
 
 }
+
+const VIGNETTE_DECLARATIONS = '                                              \
+uniform float brightness;                                                  \n\
+uniform float vignette_sharpness;                                          \n\
+float rand(vec2 p) {                                                       \n\
+  return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);        \n\
+}                                                                          \n';
+
+const VIGNETTE_CODE = '                                                      \
+cogl_color_out.a = cogl_color_in.a;                                        \n\
+cogl_color_out.rgb = vec3(0.0, 0.0, 0.0);                                  \n\
+vec2 position = cogl_tex_coord_in[0].xy - 0.5;                             \n\
+float t = clamp(length(1.41421 * position), 0.0, 1.0);                     \n\
+float pixel_brightness = mix(1.0, 1.0 - vignette_sharpness, t);            \n\
+cogl_color_out.a *= 1.0 - pixel_brightness * brightness;                   \n\
+cogl_color_out.a += (rand(position) - 0.5) / 100.0;                        \n';
+
+const MyRadialShaderEffect = GObject.registerClass({
+    Properties: {
+        'brightness': GObject.ParamSpec.float(
+            'brightness', 'brightness', 'brightness',
+            GObject.ParamFlags.READWRITE,
+            0, 1, 1),
+        'sharpness': GObject.ParamSpec.float(
+            'sharpness', 'sharpness', 'sharpness',
+            GObject.ParamFlags.READWRITE,
+            0, 1, 0),
+    },
+}, class MyRadialShaderEffect extends Shell.GLSLEffect {
+    _init(params) {
+        this._brightness = undefined;
+        this._sharpness = undefined;
+
+        super._init(params);
+
+        this._brightnessLocation = this.get_uniform_location('brightness');
+        this._sharpnessLocation = this.get_uniform_location('vignette_sharpness');
+
+        this.brightness = 1.0;
+        this.sharpness = 0.0;
+    }
+
+    vfunc_build_pipeline() {
+        this.add_glsl_snippet(Shell.SnippetHook.FRAGMENT,
+            VIGNETTE_DECLARATIONS, VIGNETTE_CODE, true);
+    }
+
+    get brightness() {
+        return this._brightness;
+    }
+
+    set brightness(v) {
+        if (this._brightness === v)
+            return;
+        this._brightness = v;
+        this.set_uniform_float(this._brightnessLocation,
+            1, [this._brightness]);
+        this.notify('brightness');
+    }
+
+    get sharpness() {
+        return this._sharpness;
+    }
+
+    set sharpness(v) {
+        if (this._sharpness === v)
+            return;
+        this._sharpness = v;
+        this.set_uniform_float(this._sharpnessLocation,
+            1, [this._sharpness]);
+        this.notify('sharpness');
+    }
+});

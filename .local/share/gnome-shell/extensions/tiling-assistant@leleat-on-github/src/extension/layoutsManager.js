@@ -1,18 +1,15 @@
-'use strict';
+import { Clutter, Gio, GObject, Meta, Shell, St } from '../dependencies/gi.js';
+import {
+    _,
+    Extension,
+    Main,
+    PanelMenu,
+    PopupMenu
+} from '../dependencies/shell.js';
 
-const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
-const { main: Main, panelMenu: PanelMenu, popupMenu: PopupMenu } = imports.ui;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const { Layout, Settings } = Me.imports.src.common;
-const { Rect, Util } = Me.imports.src.extension.utility;
-const Twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
-
-const Gettext = imports.gettext;
-const Domain = Gettext.domain(Me.metadata.uuid);
-const _ = Domain.gettext;
+import { Layout, Settings } from '../common.js';
+import { Rect, Util } from './utility.js';
+import { TilingWindowManager as Twm } from './tilingWindowManager.js';
 
 /**
  * Here are the classes to handle PopupLayouts on the shell / extension side.
@@ -32,7 +29,7 @@ const _ = Domain.gettext;
  * the Edge Tiling.
  */
 
-var LayoutManager = class TilingLayoutsManager {
+export default class TilingLayoutsManager {
     constructor() {
         // this._items is an array of LayoutItems (see explanation above).
         // this._currItem is 1 LayoutItem. A LayoutItem's rect only hold ratios
@@ -79,11 +76,13 @@ var LayoutManager = class TilingLayoutsManager {
 
         // Add panel indicator
         this._panelIndicator = new PanelIndicator();
-        Main.panel.addToStatusArea(Me.metadata.uuid, this._panelIndicator);
-        this._settingsId = Settings.changed(Settings.SHOW_LAYOUT_INDICATOR, () => {
-            this._panelIndicator.visible = Settings.getBoolean(Settings.SHOW_LAYOUT_INDICATOR);
+        Main.panel.addToStatusArea(
+            'tiling-assistant@leleat-on-github',
+            this._panelIndicator);
+        this._settingsId = Settings.changed('show-layout-panel-indicator', () => {
+            this._panelIndicator.visible = Settings.getBoolean('show-layout-panel-indicator');
         });
-        this._panelIndicator.visible = Settings.getBoolean(Settings.SHOW_LAYOUT_INDICATOR);
+        this._panelIndicator.visible = Settings.getBoolean('show-layout-panel-indicator');
         this._panelIndicator.connect('layout-activated', (src, idx) => this.startLayouting(idx));
     }
 
@@ -120,7 +119,7 @@ var LayoutManager = class TilingLayoutsManager {
         if (!layout)
             return;
 
-        const allWs = Settings.getBoolean(Settings.POPUP_ALL_WORKSPACES);
+        const allWs = Settings.getBoolean('tiling-popup-all-workspace');
         this._remainingWindows = Twm.getWindows(allWs);
         this._items = new Layout(layout).getItems();
         this._currItem = null;
@@ -203,15 +202,19 @@ var LayoutManager = class TilingLayoutsManager {
         const window = this._remainingWindows[idx];
         idx !== -1 && this._remainingWindows.splice(idx, 1);
 
-        if (window)
-            Twm.tile(window, this._currRect, { openTilingPopup: false });
-        else if (app.can_open_new_window())
+        if (window) {
+            Twm.tile(window, this._currRect, {
+                openTilingPopup: false,
+                skipAnim: true
+            });
+        } else if (app.can_open_new_window()) {
             Twm.openAppTiled(app, this._currRect);
+        }
 
         this._step();
     }
 
-    _openTilingPopup() {
+    async _openTilingPopup() {
         // There are no open windows left to tile using the Tiling Popup.
         // However there may be items with appIds, which we want to open.
         // So continue...
@@ -232,14 +235,15 @@ var LayoutManager = class TilingLayoutsManager {
         });
 
         // Create the Tiling Popup
-        const TilingPopup = Me.imports.src.extension.tilingPopup;
+        const TilingPopup = await import('./tilingPopup.js');
         const popup = new TilingPopup.TilingSwitcherPopup(
             this._remainingWindows,
             this._currRect,
             // If this._currItem is the last item and we don't loop over it,
             // allow the Tiling Popup itself to spawn another instance of
             // a Tiling Popup, if there is free screen space.
-            this._currItem === this._items.at(-1) && !this._currItem.loopType
+            this._currItem === this._items.at(-1) && !this._currItem.loopType,
+            true
         );
         const stacked = global.display.sort_windows_by_stacking(this._tiledWithLayout);
         const tileGroup = stacked.reverse();
@@ -285,7 +289,7 @@ var LayoutManager = class TilingLayoutsManager {
             this._step(this._currItem.loopType);
         }
     }
-};
+}
 
 /**
  * The GUI class for the Layout search.
@@ -456,7 +460,10 @@ const PanelIndicator = GObject.registerClass({
     _init() {
         super._init(0.0, 'Layout Indicator (Tiling Assistant)');
 
-        const path = Me.dir.get_child('media/preferences-desktop-apps-symbolic.svg').get_path();
+        const path = Extension.lookupByURL(import.meta.url)
+            .dir
+            .get_child('media/preferences-desktop-apps-symbolic.svg')
+            .get_path();
         const gicon = new Gio.FileIcon({ file: Gio.File.new_for_path(path) });
         this.add_child(new St.Icon({
             gicon,
@@ -489,12 +496,12 @@ const PanelIndicator = GObject.registerClass({
             this.menu.addMenuItem(item);
         } else {
             // Update favorites with monitor count and fill with '-1', if necessary
-            const tmp = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
+            const tmp = Settings.getStrv('favorite-layouts');
             const count = Math.max(Main.layoutManager.monitors.length, tmp.length);
             const favorites = [...new Array(count)].map((m, monitorIndex) => {
                 return tmp[monitorIndex] ?? '-1';
             });
-            Settings.setStrv(Settings.FAVORITE_LAYOUTS, favorites);
+            Settings.setStrv('favorite-layouts', favorites);
 
             // Create popup menu items
             layouts.forEach((layout, idx) => {
@@ -515,15 +522,8 @@ const PanelIndicator = GObject.registerClass({
         // Center button without changing the size (for the hover highlight)
         settingsButton._icon.set_x_expand(true);
         settingsButton.label.set_x_expand(true);
-        settingsButton.connect('activate', () => {
-            try {
-                Main.overview.hide();
-                const cmd = `gnome-extensions prefs ${Me.metadata.uuid}`;
-                GLib.spawn_command_line_async(cmd);
-            } catch (e) {
-                logError(e);
-            }
-        });
+        settingsButton.connect('activate',
+            () => Extension.lookupByURL(import.meta.url).openPreferences());
         this.menu.addMenuItem(settingsButton);
     }
 });
@@ -542,7 +542,7 @@ const PopupFavoriteMenuItem = GObject.registerClass({
             x_expand: true
         }));
 
-        const favorites = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
+        const favorites = Settings.getStrv('favorite-layouts');
         Main.layoutManager.monitors.forEach((m, monitorIndex) => {
             const favoriteButton = new St.Button({
                 child: new St.Icon({
@@ -554,9 +554,9 @@ const PopupFavoriteMenuItem = GObject.registerClass({
 
             // Update gSetting with new Favorite (act as a toggle button)
             favoriteButton.connect('clicked', () => {
-                const currFavorites = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
+                const currFavorites = Settings.getStrv('favorite-layouts');
                 currFavorites[monitorIndex] = currFavorites[monitorIndex] === `${layoutIndex}` ? '-1' : `${layoutIndex}`;
-                Settings.setStrv(Settings.FAVORITE_LAYOUTS, currFavorites);
+                Settings.setStrv('favorite-layouts', currFavorites);
                 this.emit('favorite-changed', monitorIndex);
             });
         });

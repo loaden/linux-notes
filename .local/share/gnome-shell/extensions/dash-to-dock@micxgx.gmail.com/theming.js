@@ -1,22 +1,20 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-/* exported PositionStyleClass */
-
-const { signals: Signals } = imports;
-
-const {
+import {
     Clutter,
+    GObject,
     Meta,
     St,
-} = imports.gi;
+} from './dependencies/gi.js';
 
-const { main: Main } = imports.ui;
+import {Main} from './dependencies/shell/ui.js';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const {
-    docking: Docking,
-    utils: Utils,
-} = Me.imports;
+import {
+    Docking,
+    Utils,
+} from './imports.js';
+
+const {signals: Signals} = imports;
 
 /*
  * DEFAULT:  transparency given by theme
@@ -33,7 +31,7 @@ const Labels = Object.freeze({
     TRANSPARENCY: Symbol('transparency'),
 });
 
-var PositionStyleClass = Object.freeze([
+export const PositionStyleClass = Object.freeze([
     'top',
     'right',
     'bottom',
@@ -43,7 +41,7 @@ var PositionStyleClass = Object.freeze([
 /**
  * Manage theme customization and custom theme support
  */
-var ThemeManager = class DashToDockThemeManager {
+export class ThemeManager {
     constructor(dock) {
         this._signalsHandler = new Utils.GlobalSignalsHandler(this);
         this._bindSettingsChanges();
@@ -51,8 +49,8 @@ var ThemeManager = class DashToDockThemeManager {
         this._dash = dock.dash;
 
         // initialize colors with generic values
-        this._customizedBackground = { red: 0, green: 0, blue: 0, alpha: 0 };
-        this._customizedBorder = { red: 0, green: 0, blue: 0, alpha: 0 };
+        this._customizedBackground = {red: 0, green: 0, blue: 0, alpha: 0};
+        this._customizedBorder = {red: 0, green: 0, blue: 0, alpha: 0};
         this._transparency = new Transparency(dock);
 
         this._signalsHandler.add([
@@ -159,7 +157,7 @@ var ThemeManager = class DashToDockThemeManager {
         if (!backgroundColor)
             return;
 
-        const { settings } = Docking.DockManager;
+        const {settings} = Docking.DockManager;
 
         if (settings.customBackgroundColor) {
             // When applying a custom color, we need to check the alpha value,
@@ -168,7 +166,7 @@ var ThemeManager = class DashToDockThemeManager {
             // the opacity will be set by the opaque/transparent styles anyway.
             let newAlpha = Math.round(backgroundColor.alpha / 2.55) / 100;
 
-            ({ backgroundColor } = settings);
+            ({backgroundColor} = settings);
             // backgroundColor is a string like rgb(0,0,0)
             const [ret, color] = Clutter.Color.from_string(backgroundColor);
             if (!ret) {
@@ -195,7 +193,7 @@ var ThemeManager = class DashToDockThemeManager {
     }
 
     _updateCustomStyleClasses() {
-        const { settings } = Docking.DockManager;
+        const {settings} = Docking.DockManager;
 
         if (settings.applyCustomTheme)
             this._actor.add_style_class_name('dashtodock');
@@ -242,7 +240,7 @@ var ThemeManager = class DashToDockThemeManager {
         if (!this._dash._background.get_stage())
             return;
 
-        const { settings } = Docking.DockManager;
+        const {settings} = Docking.DockManager;
 
         // Remove prior style edits
         this._dash._background.set_style(null);
@@ -313,7 +311,7 @@ var ThemeManager = class DashToDockThemeManager {
             () => this.updateCustomTheme(),
         ]));
     }
-};
+}
 Signals.addSignalMethods(ThemeManager.prototype);
 
 /**
@@ -321,7 +319,7 @@ Signals.addSignalMethods(ThemeManager.prototype);
  * https://git.gnome.org/browse/gnome-shell/commit/?id=447bf55e45b00426ed908b1b1035f472c2466956
  * Transparency when free-floating
  */
-var Transparency = class DashToDockTransparency {
+class Transparency {
     constructor(dock) {
         this._dash = dock.dash;
         this._actor = this._dash._container;
@@ -356,13 +354,22 @@ var Transparency = class DashToDockTransparency {
             this._base_actor_style = '';
 
 
+        let addedSignal = 'child-added';
+        let removedSignal = 'child-removed';
+
+        // for compatibility with Gnome Shell 45
+        if (GObject.signal_lookup('actor-added', global.window_group)) {
+            addedSignal = 'actor-added';
+            removedSignal = 'actor-removed';
+        }
+
         this._signalsHandler.addWithLabel(Labels.TRANSPARENCY, [
             global.window_group,
-            'actor-added',
+            addedSignal,
             this._onWindowActorAdded.bind(this),
         ], [
             global.window_group,
-            'actor-removed',
+            removedSignal,
             this._onWindowActorRemoved.bind(this),
         ], [
             global.window_manager,
@@ -550,7 +557,7 @@ var Transparency = class DashToDockTransparency {
 
         Main.uiGroup.remove_child(dummyObject);
 
-        const { settings } = Docking.DockManager;
+        const {settings} = Docking.DockManager;
 
         if (settings.customizeAlphas) {
             this._opaqueAlpha = settings.maxAlpha;
@@ -559,5 +566,5 @@ var Transparency = class DashToDockTransparency {
             this._transparentAlphaBorder = this._transparentAlpha / 2;
         }
     }
-};
+}
 Signals.addSignalMethods(Transparency.prototype);
