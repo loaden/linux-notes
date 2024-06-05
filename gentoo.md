@@ -341,6 +341,7 @@
   # emerge -avg microsoft-edge
   # emerge -avg gnome-text-editor
   # emerge -avg vscode
+  # emerge -avg cloudflare-warp --autounmask
   # emerge -avg tencent-qq --autounmask
   # emerge -avg dingtalk --autounmask
   ```
