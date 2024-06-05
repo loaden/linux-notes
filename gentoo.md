@@ -352,19 +352,13 @@
 ### GNOME组件补充
 
   ```shell
-  # emerge -avg gnome-text-editor
-  # emerge -avg gnome-calculator
-  # emerge -avg evince
+  # emerge -avug gnome-text-editor gnome-calculator evince eog
   ```
 
 ### 常用软件
 
   ```shell
-  # emerge -avg microsoft-edge
-  # emerge -avg vscode
-  # emerge -avg tencent-qq --autounmask
-  # emerge -avg dingtalk --autounmask
-  # emerge -avg obs-studio --autounmask
+  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot
   ```
 
 ## Gentoo 技巧总结
