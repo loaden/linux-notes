@@ -352,23 +352,16 @@
 ### GNOME组件补充
 
   ```shell
-  # emerge -avug gnome-text-editor gnome-calculator evince eog
+  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator evince eog file-roller
   ```
 
 ### 常用软件
 
   ```shell
-  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot
+  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office
   ```
 
 ## Gentoo 技巧总结
-
-### 创建用户目录
-
-  ```shell
-  # emerge -av1 xdg-user-dirs
-  $ xdg-user-dirs-update --force
-  ```
 
 ### 清理未完成的安装任务
   >
@@ -537,6 +530,13 @@
   > `# emerge -av microsoft-edge`
 * 开发
   > `# emerge -av vscode`
+
+### 创建用户目录
+
+  ```shell
+  # emerge -av1 xdg-user-dirs
+  $ xdg-user-dirs-update --force
+  ```
 
 ## Gentoo 定制内核
 
