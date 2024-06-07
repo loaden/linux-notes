@@ -397,6 +397,14 @@
 
 ## Gentoo 技巧总结
 
+### 紧凑模式搜索以`ibus`开头的包
+  >
+  > `$ eix -c ^ibus`
+
+### 紧凑模式搜索以`editor`结尾的包
+  >
+  > `$ eix -c editor$`
+
 ### 清理未完成的安装任务
   >
   > `# emaint --fix cleanresume`
