@@ -268,6 +268,9 @@
   systemctl --user enable --now wireplumber
   ```
 
+  * 这个依赖也是必须的
+    > `# emerge -av xdg-desktop-portal-wlr`
+
 ### 启动音频服务
 
   ```shell
@@ -444,6 +447,8 @@
   ```shell
   systemctl list-unit-files --state=enabled
   systemctl list-unit-files --state=disabled
+  systemctl list-unit-files --state=enabled --user
+  systemctl list-unit-files --state=disabled --user
   systemctl list-units --type=service --state=running
   systemctl list-units --type=service --state=active
   systemctl list-units --type=service
