@@ -368,7 +368,7 @@
 ### GNOME组件补充
 
   ```shell
-  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator evince eog file-roller
+  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
   ```
 
 ### 常用软件
