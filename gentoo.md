@@ -259,6 +259,15 @@
 >
 > `# systemctl enable --now bluetooth`
 
+### 启动PipeWire服务
+
+* 必须启用，否则PipeWire相关功能不正常，例如OBS捕获屏幕黑屏等。
+
+  ```shell
+  systemctl --user enable --now pipewire
+  systemctl --user enable --now wireplumber
+  ```
+
 ### 启动音频服务
 
   ```shell
@@ -277,6 +286,7 @@
   > `# eselect repository enable guru gentoo-zh`
 * 同步
   > `# emerge --sync guru gentoo-zh`
+
   * 查询软件源信息
     >`$ portageq repos_config /`
 
