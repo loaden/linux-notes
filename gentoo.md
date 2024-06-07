@@ -425,6 +425,20 @@
   # eclean-kernel -n 2
   ```
 
+### 查询已安装包
+  >
+  > `$ eix xdg-desktop- --installed`
+
+### 查询服务
+
+  ```shell
+  systemctl list-unit-files --state=enabled
+  systemctl list-unit-files --state=disabled
+  systemctl list-units --type=service --state=running
+  systemctl list-units --type=service --state=active
+  systemctl list-units --type=service
+  ```
+
 ## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
 * 选择 `default/linux/amd64/23.0/desktop/systemd` 配置文件
