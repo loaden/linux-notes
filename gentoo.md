@@ -81,11 +81,7 @@
     > `# emerge-webrsync`
 
 * 常用工具
-
-  ```shell
-  # emerge -au sudo links gentoolkit eix bash-completion dev-vcs/git
-  # dispatch-conf
-  ```
+  > `# emerge -au sudo gentoolkit eix bash-completion dev-vcs/git`
 
 * [Git 方式同步](etc/portage/repos.conf/gentoo.conf)
   > `# mkdir -p /etc/portage/repos.conf`
@@ -134,7 +130,7 @@
 * [二进制包配置](etc/portage/binrepos.conf/gentoobinhost.conf)
   > `$ ld.so --help`
 
-  `# nano etc/portage/binrepos.conf/gentoobinhost.conf`
+  `# nano /etc/portage/binrepos.conf/gentoobinhost.conf`
 
   ```text
   [gentoobinhost]
@@ -174,6 +170,7 @@
   ```
 
 * [分区挂载表](etc/fstab)
+  > `# nano /etc/fstab`
 
   ```text
   # <file system>  <mount point>  <type>  <options>               <dump>  <pass>
@@ -187,11 +184,15 @@
 
 ### 基础系统安装
 
-* 更新 [`@world` 集合](var/lib/portage/world)
-  > `# emerge -avuDN @world`
-
 * 内核与硬件驱动
-  > `# emerge -av linux-firmware gentoo-kernel-bin`
+
+  ```shell
+  # emerge -av gentoo-kernel-bin linux-firmware
+  # dispatch-conf
+  ```
+
+* 系统更新 [`@world`](var/lib/portage/world)
+  > `# emerge -avuDNg @world`
 
 * 中文字体
   > `# emerge -av source-han-sans`
@@ -233,7 +234,8 @@
 
   ```shell
   $ getent group plugdev
-  # gpasswd -a <username> plugdev
+  # usermod -aG plugdev <username>
+  $ groups <username>
   ```
 
 * 启用显示管理器
@@ -269,34 +271,34 @@
 
 ### 启用[扩展库](etc/portage/repos.conf/eselect-repo.conf)
 
-* 安装依赖
-  > `# emerge -au eselect-repository dev-vcs/git`
-* 启用
-  > `# eselect repository enable gentoo-zh guru`
+* 安装工具
+  > `# emerge -au eselect-repository`
+* 启用软件源
+  > `# eselect repository enable guru gentoo-zh`
 * 同步
-  > `# emerge --sync gentoo-zh guru`
+  > `# emerge --sync guru gentoo-zh`
+  * 查询软件源信息
+    >`$ portageq repos_config /`
 
-  * 克隆
+  * 手动克隆
 
     ```shell
     # git clone --depth 1 https://github.com/gentoo-mirror/guru.git /var/db/repos/guru
     # git clone --depth 1 https://github.com/gentoo-mirror/gentoo-zh.git /var/db/repos/gentoo-zh
-    # emerge --update
     # eix-update
     ```
 
   * 手动同步
 
     ```shell
-    # cd /var/db/repos/gentoo-zh
+    # cd /var/db/repos/guru
     # git pull
-    # emerge --update
     # eix-update
     ```
 
 ### 普通用户授权
 
-  > `# nano /etc/polkit-1/rules.d/10-admin.rules`
+  > `# nano /etc/polkit-1/rules.d/49-wheel.rules`
 
   ```text
   polkit.addAdminRule(function(action, subject) {
@@ -311,8 +313,9 @@
 * 安装补充字体
 
   ```shell
-  # emerge -av ubuntu-font-family source-code-pro
-  # emerge -av --autounmask source-han-serif
+  # emerge -v ubuntu-font-family source-code-pro
+  # emerge -v --autounmask source-han-serif
+  # dispatch-conf
   ```
 
 * [用户字体配置文件](.config/fontconfig/fonts.conf)
@@ -338,7 +341,7 @@
 ### 科学上网
 
   ```shell
-  # # emerge -avg cloudflare-warp --autounmask
+  # emerge -avg cloudflare-warp --autounmask
   # dispatch-conf
   ```
 
