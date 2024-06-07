@@ -6,10 +6,10 @@
 
 ## 发行版列表
 
-* [ArchLinux](https://archlinux.org/) ***推荐***
-  > [arch.md](arch.md)
-* [Gentoo](https://www.gentoo.org/) *适合学习*
+* [Gentoo](https://www.gentoo.org/) ***推荐***
   > [gentoo.md](gentoo.md)
+* [ArchLinux](https://archlinux.org/) *难度低*
+  > [arch.md](arch.md)
 * [LFS](https://github.com/loaden/bash-lfs) *适合学习*
   > `https://github.com/loaden/bash-lfs`
   * [bash-lfs](<https://github.com/loaden/bash-lfs>) 为了降低难度，实现了全脚本分阶段或完整编译，默认支持> Btrfs + 子卷。
