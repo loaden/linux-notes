@@ -371,7 +371,7 @@
 ### 常用软件
 
   ```shell
-  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office
+  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office gimp
   ```
 
 ## Gentoo 技巧总结
