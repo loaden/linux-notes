@@ -377,6 +377,24 @@
   # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office gimp
   ```
 
+### Overlay仓库
+
+* 海量野包下载：<https://gpo.zugaina.org/>
+
+* 创建本地仓库 `lucky`
+
+  * 以 `todesk` 野包为例：<https://gpo.zugaina.org/net-misc/todesk>
+
+  ```shell
+  # eselect repository create lucky
+  # mkdir -p /var/db/repos/lucky/net-misc/todesk
+  # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
+  # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
+  # eix-update
+  # emerge -avg =net-misc/todesk-4.7.2.0 --autounmask
+  # dispatch-conf
+  ```
+
 ## Gentoo 技巧总结
 
 ### 清理未完成的安装任务
