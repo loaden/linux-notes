@@ -480,6 +480,10 @@
   systemctl list-units --type=service
   ```
 
+### 从`@world`集合中移除包
+  >
+  > `# emerge --deselect gnumeric`
+
 ## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
 * 选择 `default/linux/amd64/23.0/desktop/systemd` 配置文件
@@ -646,3 +650,18 @@
 ### [定制](.bin/kernel.sh)
   >
   > .bin/kernel.sh
+
+## Gentoo 程序开发
+
+### Rust 环境配置
+
+* 调整`rust-bin`的USE
+  > `# euse -p dev-lang/rust-bin -E rust-analyzer rust-src rustfmt doc`
+
+* 安装
+  > `# emerge -avuDNg rust-bin rustup --autounmask`
+
+* 配置
+  > `$ rustup-init-gentoo --symlink`
+
+  * 将 `.cargo/bin` 添加到 `PATH` 最前面
