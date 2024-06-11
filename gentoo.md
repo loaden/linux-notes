@@ -497,6 +497,12 @@
   >
   > `# emerge --deselect gnumeric`
 
+### 修改用户主目录
+
+* 注销桌面，进另一个`tty`登录`root`
+  >
+  > `# usermod -d <新目录> -m <用户名>`
+
 ## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
 * 选择 `default/linux/amd64/23.0/desktop/systemd` 配置文件
