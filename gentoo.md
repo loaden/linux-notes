@@ -395,6 +395,19 @@
   # dispatch-conf
   ```
 
+### HP打印机配置
+
+* 安装`cups`扩展
+  > `# emerge -av cups-filters`
+
+* 安装驱动
+
+  ```shell
+  # euse -p net-print/hplip -D qt5 snmp libnotify
+  # emerge -avg hplip-plugin
+  # hp-setup
+  ```
+
 ## Gentoo 技巧总结
 
 ### 紧凑模式搜索以`ibus`开头的包
