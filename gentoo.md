@@ -397,7 +397,7 @@ polkit.addAdminRule(function(action, subject) {
 * 安装
 
   ```shell
-  # emerge -avg timeshift --autounmask
+  # emerge -avg --autounmask timeshift btrfs-progs
   # dispatch-conf
   ```
 
