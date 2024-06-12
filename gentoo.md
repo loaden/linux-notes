@@ -423,14 +423,18 @@ polkit.addAdminRule(function(action, subject) {
   # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
   # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
   # eix-update
-  # emerge -avg =net-misc/todesk-4.7.2.0 --autounmask
+  # emerge -avg =todesk-4.7.2.0 --autounmask
   # dispatch-conf
   ```
 
 ### HP打印机配置
 
 * 安装`cups`扩展
-  > `# emerge -av cups-filters`
+
+  ```shell
+  # emerge -avg cups-filters
+  # systemctl restart cups
+  ```
 
 * 安装驱动
 
@@ -439,6 +443,9 @@ polkit.addAdminRule(function(action, subject) {
   # emerge -avg hplip-plugin
   # hp-setup
   ```
+
+  * 扫描
+    > `# emerge -avg simple-scan`
 
 ## Gentoo 技巧总结
 
