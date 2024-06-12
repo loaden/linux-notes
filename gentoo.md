@@ -115,7 +115,7 @@
 
   ```shell
   $ eselect profile list
-  # eselect profile set <number>
+  # eselect profile set <序号>
   $ eselect profile show
   ```
 
@@ -202,7 +202,7 @@
   ```shell
   # mkdir /etc/sudoers.d
   # echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
-  # useradd -m -G wheel <用户名>
+  # useradd -d /home/<用户目录名> -mG wheel <用户名>
   # passwd <用户名>
   ```
 
@@ -234,8 +234,9 @@
 
   ```shell
   $ getent group plugdev
-  # usermod -aG plugdev <username>
-  $ groups <username>
+  # usermod -aG plugdev <用户名>
+  $ groups <用户名>
+  $ id <用户名>
   ```
 
 * 启用显示管理器
@@ -259,6 +260,13 @@
 >
 > `# systemctl enable --now bluetooth`
 
+### 启动音频服务
+
+  ```shell
+  systemctl --user enable --now pulseaudio
+  systemctl --user status pulseaudio
+  ```
+
 ### 启动PipeWire服务
 
 * 必须启用，否则PipeWire相关功能不正常，例如OBS捕获屏幕黑屏等。
@@ -270,13 +278,6 @@
 
   * 这个依赖也是必须的
     > `# emerge -av xdg-desktop-portal-wlr`
-
-### 启动音频服务
-
-  ```shell
-  systemctl --user enable --now pulseaudio
-  systemctl --user status pulseaudio
-  ```
 
 * 查询
     > `$ LANG=C pactl info | grep "Server Name"`
@@ -313,11 +314,11 @@
 
   > `# nano /etc/polkit-1/rules.d/49-wheel.rules`
 
-  ```text
-  polkit.addAdminRule(function(action, subject) {
-    return ["unix-group:wheel"];
-  });
-  ```
+```text
+polkit.addAdminRule(function(action, subject) {
+  return ["unix-group:wheel"];
+});
+```
 
   > `# systemctl restart polkit.service`
 
@@ -326,8 +327,8 @@
 * 安装补充字体
 
   ```shell
-  # emerge -v ubuntu-font-family source-code-pro
-  # emerge -v --autounmask source-han-serif
+  # emerge -av ubuntu-font-family source-code-pro
+  # emerge -av --autounmask source-han-serif
   # dispatch-conf
   ```
 
@@ -349,7 +350,33 @@
   # dispatch-conf
   ```
 
-* 注销电脑，之后：设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
+* 执行重启`ibus`输入法框架命令，或者注销电脑
+  > `$ ibus restart`
+
+* 添加输入法
+  * 设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
+
+### GNOME组件补充
+
+  ```shell
+  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
+  ```
+
+### 常用软件
+
+* 提前配置USE
+
+  ```shell
+  # euse -p media-video/obs-studio -E pipewire v4l
+  # euse -p media-libs/opencv -E contrib
+  # euse -p app-editors/vscode -D wayland
+  ```
+
+* 批量安装
+
+  ```shell
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot timeshift
+  ```
 
 ### 科学上网
 
@@ -363,18 +390,6 @@
   ```shell
   # systemctl enable --now warp-svc.service
   $ systemctl --user enable --now warp-taskbar.service
-  ```
-
-### GNOME组件补充
-
-  ```shell
-  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
-  ```
-
-### 常用软件
-
-  ```shell
-  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office gimp
   ```
 
 ### Overlay仓库
@@ -417,6 +432,10 @@
 ### 紧凑模式搜索以`editor`结尾的包
   >
   > `$ eix -c editor$`
+
+### 紧凑模式搜索`ibus`且包含`engine`描述的包
+  >
+  > `$ eix -c -S engine ibus`
 
 ### 清理未完成的安装任务
   >
@@ -502,6 +521,18 @@
 * 注销桌面，进另一个`tty`登录`root`
   >
   > `# usermod -d <新目录> -m <用户名>`
+  * `-m` 选项将原主目录中的文件全部移动到新主目录。
+
+### 修改用户名
+
+* 注销桌面，进另一个`tty`登录`root`
+  >
+  > `# usermod -l <新用户名> <旧用户名>`
+
+### 修改用户组名
+
+  >
+  > `# groupmod -n <新组名> <旧组名>`
 
 ## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
@@ -509,7 +540,7 @@
 
   ```shell
   # eselect profile list
-  # eselect profile set <number>
+  # eselect profile set <序号>
   # eselect profile show
   ```
 
@@ -626,7 +657,7 @@
   ```shell
   # emerge -av gentoo-sources
   # eselect kernel list
-  # eselect kernel set <number>
+  # eselect kernel set <序号>
   # ls -l /usr/src
   ```
 
