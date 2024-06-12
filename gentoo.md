@@ -375,7 +375,7 @@ polkit.addAdminRule(function(action, subject) {
 * 批量安装
 
   ```shell
-  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot timeshift
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot
   ```
 
 ### 科学上网
@@ -391,6 +391,23 @@ polkit.addAdminRule(function(action, subject) {
   # systemctl enable --now warp-svc.service
   $ systemctl --user enable --now warp-taskbar.service
   ```
+
+### 快照还原
+
+* 安装
+
+  ```shell
+  # emerge -avg timeshift --autounmask
+  # dispatch-conf
+  ```
+
+* 加入用户组
+
+  ```shell
+  # usermod -aG cron <用户名>
+  ```
+
+* Timeshift只支持安装在`@`子卷中的系统，并且家目录挂载在`@home`子卷上。
 
 ### Overlay仓库
 
