@@ -304,7 +304,6 @@
     ```shell
     # git clone --depth 1 https://github.com/gentoo-mirror/guru.git /var/db/repos/guru
     # git clone --depth 1 https://github.com/gentoo-mirror/gentoo-zh.git /var/db/repos/gentoo-zh
-    # eix-update
     ```
 
   * 手动同步
@@ -312,8 +311,10 @@
     ```shell
     # cd /var/db/repos/guru
     # git pull
-    # eix-update
     ```
+
+  * 更新数据库
+      > `# eix-update`
 
 ### 普通用户授权
 
@@ -332,8 +333,8 @@ polkit.addAdminRule(function(action, subject) {
 * 安装补充字体
 
   ```shell
-  # emerge -av ubuntu-font-family source-code-pro
-  # emerge -av --autounmask source-han-serif
+  # emerge -avg ubuntu-font-family source-code-pro
+  # emerge -avg --autounmask source-han-serif
   # dispatch-conf
   ```
 
