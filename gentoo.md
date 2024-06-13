@@ -560,9 +560,14 @@ polkit.addAdminRule(function(action, subject) {
   > `# usermod -l <新用户名> <旧用户名>`
 
 ### 修改用户组名
-
   >
   > `# groupmod -n <新组名> <旧组名>`
+
+### Flameshot支持Wayland
+
+* 方法一：GNOME添加快捷键命令
+  > `script --command "flameshot gui"`
+* 方法二：终端运行 `nohup flameshot &`
 
 ## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
 
