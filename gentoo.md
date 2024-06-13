@@ -288,8 +288,13 @@
   > `# emerge -au eselect-repository`
 * 启用软件源
   > `# eselect repository enable guru gentoo-zh`
-* 同步
-  > `# emerge --sync guru gentoo-zh`
+
+* 独立同步，提高成功率
+
+  ```shell
+  # emerge --sync guru
+  # emerge --sync gentoo-zh
+  ```
 
   * 查询软件源信息
     >`$ portageq repos_config /`
