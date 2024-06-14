@@ -384,6 +384,13 @@ polkit.addAdminRule(function(action, subject) {
   # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot
   ```
 
+### 远程桌面
+
+  ```shell
+  # euse -p net-misc/remmina -E vnc rdp
+  # emerge -avg remmina
+  ```
+
 ### 科学上网
 
   ```shell
@@ -425,7 +432,7 @@ polkit.addAdminRule(function(action, subject) {
 
   ```shell
   # eselect repository create lucky
-  # mkdir -p /var/db/repos/lucky/net-misc/todesk
+  # mkdir -p /var/db/repos/lucky/net-im/dingtalk
   # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
   # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
   # eix-update
