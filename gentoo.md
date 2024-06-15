@@ -428,15 +428,15 @@ polkit.addAdminRule(function(action, subject) {
 
 * 创建本地仓库 `lucky`
 
-  * 以 `todesk` 野包为例：<https://gpo.zugaina.org/net-misc/todesk>
+  * 以 `net-misc/synology-drive-client` 野包为例：<https://gpo.zugaina.org/net-misc/synology-drive-client>
 
   ```shell
   # eselect repository create lucky
-  # mkdir -p /var/db/repos/lucky/net-misc/todesk
-  # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
-  # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
+  # mkdir -p /var/db/repos/lucky/net-misc/synology-drive-client
+  # cp ./synology-drive-client-3.5.0.16084.ebuild /var/db/repos/lucky/net-misc/synology-drive-client/
+  # ebuild /var/db/repos/lucky/net-misc/synology-drive-client/synology-drive-client-3.5.0.16084.ebuild manifest
   # eix-update
-  # emerge -avg =todesk-4.7.2.0 --autounmask
+  # emerge -avg =synology-drive-client-3.5.0.16084 --autounmask
   # dispatch-conf
   ```
 
