@@ -432,7 +432,7 @@ polkit.addAdminRule(function(action, subject) {
 
   ```shell
   # eselect repository create lucky
-  # mkdir -p /var/db/repos/lucky/net-im/dingtalk
+  # mkdir -p /var/db/repos/lucky/net-misc/todesk
   # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
   # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
   # eix-update
