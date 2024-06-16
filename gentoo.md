@@ -434,7 +434,7 @@ polkit.addAdminRule(function(action, subject) {
 
   ```shell
   # mkdir -p /var/db/repos/lucky/net-misc/synology-drive-client
-  # cp ./synology-drive-client-3.5.0.16084.ebuild /var/db/repos/lucky/net-misc/synology-drive-client/
+  # cp synology-drive-client-3.5.0.16084.ebuild /var/db/repos/lucky/net-misc/synology-drive-client/
   # ebuild /var/db/repos/lucky/net-misc/synology-drive-client/synology-drive-client-3.5.0.16084.ebuild manifest
   # eix-update
   # emerge -avg =synology-drive-client-3.5.0.16084 --autounmask
