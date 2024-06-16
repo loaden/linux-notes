@@ -427,11 +427,12 @@ polkit.addAdminRule(function(action, subject) {
 * 海量野包下载：<https://gpo.zugaina.org/>
 
 * 创建本地仓库 `lucky`
+  > `$ eselect repository create lucky`
 
+* 安装野包
   * 以 `net-misc/synology-drive-client` 野包为例：<https://gpo.zugaina.org/net-misc/synology-drive-client>
 
   ```shell
-  # eselect repository create lucky
   # mkdir -p /var/db/repos/lucky/net-misc/synology-drive-client
   # cp ./synology-drive-client-3.5.0.16084.ebuild /var/db/repos/lucky/net-misc/synology-drive-client/
   # ebuild /var/db/repos/lucky/net-misc/synology-drive-client/synology-drive-client-3.5.0.16084.ebuild manifest
