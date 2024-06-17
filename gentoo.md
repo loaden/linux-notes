@@ -384,6 +384,12 @@ polkit.addAdminRule(function(action, subject) {
   # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot
   ```
 
+### 扩展软件
+
+  ```shell
+  # emerge -avug --autounmask wps-office dingtalk wechat-universal-bwrap fastfetch xlsclients
+  ```
+
 ### 远程桌面
 
   ```shell
