@@ -1,20 +1,26 @@
-import {
+/* exported GlobalSignalsHandler, InjectionsHandler, VFuncInjectionsHandler,
+            PropertyInjectionsHandler, SignalHandlersFlags, IconTheme,
+            CancellableChild, getPosition, drawRoundedLine,
+            getWindowsByObjectPath, shellAppCompare, shellWindowsCompare,
+            splitHandler, getMonitorManager, laterAdd, laterRemove */
+
+const {
     Clutter,
     GLib,
     Gio,
     GObject,
+    Gtk,
     Meta,
     Shell,
     St,
-} from './dependencies/gi.js';
+} = imports.gi;
 
-import {
-    Docking,
-} from './imports.js';
+const { _gi: Gi } = imports;
 
-const {_gi: Gi} = imports;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { docking: Docking } = Me.imports;
 
-export const SignalsHandlerFlags = Object.freeze({
+var SignalsHandlerFlags = Object.freeze({
     NONE: 0,
     CONNECT_AFTER: 1,
 });
@@ -154,7 +160,7 @@ const BasicHandler = class DashToDockBasicHandler {
 /**
  * Manage global signals
  */
-export class GlobalSignalsHandler extends BasicHandler {
+var GlobalSignalsHandler = class DashToDockGlobalSignalHandler extends BasicHandler {
     _create(object, event, callback, flags = SignalsHandlerFlags.NONE) {
         if (!object)
             throw new Error('Impossible to connect to an invalid object');
@@ -197,12 +203,12 @@ export class GlobalSignalsHandler extends BasicHandler {
         if (object instanceof GObject.Object)
             GObject.Object.prototype.unblock_signal_handler.call(object, id);
     }
-}
+};
 
 /**
  * Color manipulation utilities
  */
-export class ColorUtils {
+var ColorUtils = class DashToDockColorUtils {
     // Darken or brigthen color by a fraction dlum
     // Each rgb value is modified by the same fraction.
     // Return "#rrggbb" string
@@ -231,7 +237,7 @@ export class ColorUtils {
     // Return {r:r, g:g, b:b} object.
     static HSVtoRGB(h, s, v) {
         if (arguments.length === 1)
-            ({s, v, h} = h);
+            ({ s, v, h } = h);
 
         let r, g, b;
         const c = v * s;
@@ -279,7 +285,7 @@ export class ColorUtils {
     // Return {h:h, s:s, v:v} object.
     static RGBtoHSV(r, g, b) {
         if (arguments.length === 1)
-            ({r, g, b} = r);
+            ({ r, g, b } = r);
 
         let h, s;
 
@@ -309,13 +315,13 @@ export class ColorUtils {
             v,
         };
     }
-}
+};
 
 /**
  * Manage function injection: both instances and prototype can be overridden
  * and restored
  */
-export class InjectionsHandler extends BasicHandler {
+var InjectionsHandler = class DashToDockInjectionsHandler extends BasicHandler {
     _create(object, name, injectedFunction) {
         const original = object[name];
 
@@ -332,13 +338,13 @@ export class InjectionsHandler extends BasicHandler {
         const [object, name, original] = item;
         object[name] = original;
     }
-}
+};
 
 /**
  * Manage vfunction injection: both instances and prototype can be overridden
  * and restored
  */
-export class VFuncInjectionsHandler extends BasicHandler {
+var VFuncInjectionsHandler = class DashToDockVFuncInjectionsHandler extends BasicHandler {
     _create(prototype, name, injectedFunction) {
         const original = prototype[`vfunc_${name}`];
         if (!(original instanceof Function))
@@ -373,25 +379,25 @@ export class VFuncInjectionsHandler extends BasicHandler {
 
         return prototype[Gi.hook_up_vfunc_symbol](name, func);
     }
-}
+};
 
 /**
  * Manage properties injection: both instances and prototype can be overridden
  * and restored
  */
-export class PropertyInjectionsHandler extends BasicHandler {
+var PropertyInjectionsHandler = class DashToDockPropertyInjectionsHandler extends BasicHandler {
     _create(instance, name, injectedPropertyDescriptor) {
         if (!(name in instance))
             throw new Error(`Object ${instance} has no '${name}' property`);
 
-        const {prototype} = instance.constructor;
+        const { prototype } = instance.constructor;
         const originalPropertyDescriptor = Object.getOwnPropertyDescriptor(prototype, name) ??
             Object.getOwnPropertyDescriptor(instance, name);
 
         Object.defineProperty(instance, name, {
             ...originalPropertyDescriptor,
             ...injectedPropertyDescriptor,
-            ...{configurable: true},
+            ...{ configurable: true },
         });
         return [instance, name, originalPropertyDescriptor];
     }
@@ -403,12 +409,12 @@ export class PropertyInjectionsHandler extends BasicHandler {
         else
             delete instance[name];
     }
-}
+};
 
 /**
  * Return the actual position reverseing left and right in rtl
  */
-export function getPosition() {
+function getPosition() {
     const position = Docking.DockManager.settings.dockPosition;
     if (Clutter.get_default_text_direction() === Clutter.TextDirection.RTL) {
         if (position === St.Side.LEFT)
@@ -430,7 +436,7 @@ export function getPosition() {
  * @param stroke
  * @param fill
  */
-export function drawRoundedLine(cr, x, y, width, height, isRoundLeft, isRoundRight, stroke, fill) {
+function drawRoundedLine(cr, x, y, width, height, isRoundLeft, isRoundRight, stroke, fill) {
     if (height > width) {
         y += Math.floor((height - width) / 2.0);
         height = width;
@@ -438,8 +444,8 @@ export function drawRoundedLine(cr, x, y, width, height, isRoundLeft, isRoundRig
 
     height = 2.0 * Math.floor(height / 2.0);
 
-    const leftRadius = isRoundLeft ? height / 2.0 : 0.0;
-    const rightRadius = isRoundRight ? height / 2.0 : 0.0;
+    var leftRadius = isRoundLeft ? height / 2.0 : 0.0;
+    var rightRadius = isRoundRight ? height / 2.0 : 0.0;
 
     cr.moveTo(x + width - rightRadius, y);
     cr.lineTo(x + leftRadius, y);
@@ -471,13 +477,13 @@ export function drawRoundedLine(cr, x, y, width, height, isRoundLeft, isRoundRig
  *
  * @param handler
  */
-export function splitHandler(handler) {
+function splitHandler(handler) {
     if (handler.length > 30)
         throw new Error('too many parameters');
 
     const count = handler.length - 1;
     let missingValueBits = (1 << count) - 1;
-    const values = Array.from({length: count});
+    const values = Array.from({ length: count });
     return values.map((_ignored, i) => {
         const mask = ~(1 << i);
         return (obj, value) => {
@@ -489,12 +495,39 @@ export function splitHandler(handler) {
     });
 }
 
+var IconTheme = class DashToDockIconTheme {
+    constructor() {
+        if (St.IconTheme) {
+            this._iconTheme = new St.IconTheme();
+            return;
+        }
+
+        const settings = St.Settings.get();
+        this._iconTheme = new Gtk.IconTheme();
+        this._iconTheme.set_custom_theme(settings.gtkIconTheme);
+        this._changesId = settings.connect('notify::gtk-icon-theme', () => {
+            this._iconTheme.set_custom_theme(settings.gtkIconTheme);
+        });
+    }
+
+    get iconTheme() {
+        return this._iconTheme;
+    }
+
+    destroy() {
+        if (this._changesId)
+            St.Settings.get().disconnect(this._changesId);
+
+        this._iconTheme = null;
+    }
+};
+
 /**
  * Construct a map of gtk application window object paths to MetaWindows.
  */
-export function getWindowsByObjectPath() {
+function getWindowsByObjectPath() {
     const windowsByObjectPath = new Map();
-    const {workspaceManager} = global;
+    const { workspaceManager } = global;
     const workspaces = [...new Array(workspaceManager.nWorkspaces)].map(
         (_c, i) => workspaceManager.get_workspace_by_index(i));
 
@@ -515,7 +548,7 @@ export function getWindowsByObjectPath() {
  * @param appA
  * @param appB
  */
-export function shellAppCompare(appA, appB) {
+function shellAppCompare(appA, appB) {
     if (appA.state !== appB.state) {
         if (appA.state === Shell.AppState.RUNNING)
             return -1;
@@ -553,7 +586,7 @@ export function shellAppCompare(appA, appB) {
  * @param winA
  * @param winB
  */
-export function shellWindowsCompare(winA, winB) {
+function shellWindowsCompare(winA, winB) {
     const activeWorkspace = global.workspaceManager.get_active_workspace();
     const wsA = winA.get_workspace() === activeWorkspace;
     const wsB = winB.get_workspace() === activeWorkspace;
@@ -574,7 +607,7 @@ export function shellWindowsCompare(winA, winB) {
     return winB.get_user_time() - winA.get_user_time();
 }
 
-export const CancellableChild = GObject.registerClass({
+var CancellableChild = GObject.registerClass({
     Properties: {
         'parent': GObject.ParamSpec.object(
             'parent', 'parent', 'parent',
@@ -587,7 +620,7 @@ class CancellableChild extends Gio.Cancellable {
         if (parent && !(parent instanceof Gio.Cancellable))
             throw TypeError('Not a valid cancellable');
 
-        super._init({parent});
+        super._init({ parent });
 
         if (parent?.is_cancelled()) {
             this.cancel();
@@ -632,7 +665,7 @@ class CancellableChild extends Gio.Cancellable {
 /**
  *
  */
-export function getMonitorManager() {
+function getMonitorManager() {
     return global.backend.get_monitor_manager?.() ?? Meta.MonitorManager.get();
 }
 
@@ -640,7 +673,7 @@ export function getMonitorManager() {
  * @param laterType
  * @param callback
  */
-export function laterAdd(laterType, callback) {
+function laterAdd(laterType, callback) {
     return global.compositor?.get_laters?.().add(laterType, callback) ??
         Meta.later_add(laterType, callback);
 }
@@ -648,48 +681,10 @@ export function laterAdd(laterType, callback) {
 /**
  * @param id
  */
-export function laterRemove(id) {
+function laterRemove(id) {
     if (global.compositor?.get_laters)
         global.compositor?.get_laters().remove(id);
     else
         Meta.later_remove(id);
 }
 
-/**
- * Up to Gnome Shell 45, the Cairo Context object didn't export the
- * `setSourceColor()` method, so Clutter included a function call for
- * that, written in C. In Gnome Shell 46, the method was finally exported,
- * so that function was removed.
- *
- * This function is, thus, required for Gnome Shell 45 compatibility.
- *
- * @param {*} cr A cairo context
- * @param {*} sourceColor The new color for source
- */
-export function cairoSetSourceColor(cr, sourceColor) {
-    if (Clutter.cairo_set_source_color)
-        Clutter.cairo_set_source_color(cr, sourceColor);
-    else
-        cr.setSourceColor(sourceColor);
-}
-
-/**
- * Specifies if the system supports extended barriers. This function
- * is required for Gnome Shell 45 compatibility, which used
- * `global.display.supports_extended_barriers`. Gnome Shell 46 moved
- * that into global.backend.capabilities.
- *
- * @returns True if the system supports extended barriers.
- */
-export function supportsExtendedBarriers() {
-    if (global.display.supports_extended_barriers)
-        return global.display.supports_extended_barriers();
-    return !!(global.backend.capabilities & Meta.BackendCapabilities.BARRIERS);
-}
-
-export function addActor(element, actor) {
-    if (element.add_actor)
-        element.add_actor(actor);
-    else
-        element.add_child(actor);
-}

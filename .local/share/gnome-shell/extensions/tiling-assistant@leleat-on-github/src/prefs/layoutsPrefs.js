@@ -1,6 +1,12 @@
-import { Gio, GLib } from '../dependencies/prefs/gi.js';
+'use strict';
 
-import { LayoutRow } from './layoutRow.js';
+const { Gio, GLib } = imports.gi;
+const ByteArray = imports.byteArray;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const LayoutRow = Me.imports.src.prefs.layoutRow.LayoutRow;
 
 /**
  * This class takes care of everything related to layouts (at least on the
@@ -31,8 +37,8 @@ import { LayoutRow } from './layoutRow.js';
  * an existing feature... thus it's hidden
  */
 
-export default class {
-    constructor(settings, builder, path) {
+var Prefs = class TilingLayoutsPrefs {
+    constructor(settings, builder) {
         // Keep a reference to the settings for the shortcuts
         this._settings = settings;
 
@@ -68,10 +74,10 @@ export default class {
         });
 
         // Finally, load the existing settings.
-        this._loadLayouts(path);
+        this._loadLayouts();
     }
 
-    _loadLayouts(path) {
+    _loadLayouts() {
         this._applySaveButtonStyle('');
 
         this._forEachLayoutRow(row => row.destroy());
@@ -87,7 +93,7 @@ export default class {
 
         // Custom layouts are already defined in the file.
         if (contents.length) {
-            layouts = JSON.parse(new TextDecoder().decode(contents));
+            layouts = JSON.parse(ByteArray.toString(contents));
             // Ensure at least 1 empty row otherwise the listbox won't have
             // a height but a weird looking shadow only.
             layouts.length
@@ -102,12 +108,12 @@ export default class {
                 return;
 
             this._settings.set_boolean(importExamples, false);
-            const exampleFile = this._makeFile(`${path}/src`, 'layouts_example.json');
+            const exampleFile = this._makeFile(`${Me.path}/src`, 'layouts_example.json');
             const [succ, c] = exampleFile.load_contents(null);
             if (!succ)
                 return;
 
-            layouts = c.length ? JSON.parse(new TextDecoder().decode(c)) : [];
+            layouts = c.length ? JSON.parse(ByteArray.toString(c)) : [];
             layouts.forEach((layout, idx) => this._createLayoutRow(idx, layout));
             this._saveLayouts();
         }
@@ -165,23 +171,13 @@ export default class {
         const dirLocation = parentPath ||
                 GLib.build_filenamev([userConfigDir, '/tiling-assistant']);
         const parentDir = Gio.File.new_for_path(dirLocation);
-
-        try {
-            parentDir.make_directory_with_parents(null);
-        } catch (e) {
-            logError(e);
-        }
+        try { parentDir.make_directory_with_parents(null); } catch (e) {}
 
         // Create file, if it doesn't exist.
         const fName = fileName || 'layouts.json';
         const filePath = GLib.build_filenamev([dirLocation, '/', fName]);
         const file = Gio.File.new_for_path(filePath);
-
-        try {
-            file.create(Gio.FileCreateFlags.NONE, null);
-        } catch (e) {
-            logError(e);
-        }
+        try { file.create(Gio.FileCreateFlags.NONE, null); } catch (e) {}
 
         return file;
     }
@@ -229,4 +225,4 @@ export default class {
             child = nxtSibling;
         }
     }
-}
+};

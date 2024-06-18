@@ -14,7 +14,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-export function argbToRgba(src) {
+/* exported argbToRgba, getBestPixmap */
+
+function argbToRgba(src) {
     const dest = new Uint8Array(src.length);
 
     for (let j = 0; j < src.length; j += 4) {
@@ -29,7 +31,7 @@ export function argbToRgba(src) {
     return dest;
 }
 
-export function getBestPixmap(pixmapsVariant, preferredSize) {
+function getBestPixmap(pixmapsVariant, preferredSize) {
     if (!pixmapsVariant)
         throw new TypeError('null pixmapsVariant');
 
@@ -47,7 +49,7 @@ export function getBestPixmap(pixmapsVariant, preferredSize) {
     }));
 
     const sortedIconPixmapArray = pixmapsSizedArray.sort(
-        ({width: widthA, height: heightA}, {width: widthB, height: heightB}) => {
+        ({ width: widthA, height: heightA }, { width: widthB, height: heightB }) => {
             const areaA = widthA * heightA;
             const areaB = widthB * heightB;
 
@@ -55,14 +57,14 @@ export function getBestPixmap(pixmapsVariant, preferredSize) {
         });
 
     // we prefer any pixmap that is equal or bigger than our requested size
-    const qualifiedIconPixmapArray = sortedIconPixmapArray.filter(({width, height}) =>
+    const qualifiedIconPixmapArray = sortedIconPixmapArray.filter(({ width, height }) =>
         width >= preferredSize && height >= preferredSize);
 
-    const {width, height, index} = qualifiedIconPixmapArray.length > 0
+    const { width, height, index } = qualifiedIconPixmapArray.length > 0
         ? qualifiedIconPixmapArray[0] : sortedIconPixmapArray.pop();
 
     const pixmapVariant = pixmapsVariantsArray[index].get_child_value(2);
     const rowStride = width * 4; // hopefully this is correct
 
-    return {pixmapVariant, width, height, rowStride};
+    return { pixmapVariant, width, height, rowStride };
 }

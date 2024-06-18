@@ -1,46 +1,16 @@
 ============================
-📋 Clipboard Indicator
+Clipboard Indicator
 ============================
 
-.. image:: https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/eb9af9a1c6f04eb060cb01de6aeb5c84232cd8c0/get-it-on-ego.svg?sanitize=true
-   :target: https://extensions.gnome.org/extension/779/clipboard-indicator/
-   :width: 180
-   :alt: Get it on GNOME Extensions
+Clipboard Manager extension for Gnome-Shell - Adds a clipboard indicator to the top panel, and caches clipboard history.
 
-The most popular, reliable and feature-rich clipboard manager for GNOME with
-over **1M** downloads.
+Extension page on e.g.o:
+https://extensions.gnome.org/extension/779/clipboard-indicator/
 
-|Screenshot|
-
-.. |Screenshot| image:: ./screenshot.png
-  :width: 400
-  :alt: A screenshot of the clipboard manager, showing clipboard history including images
-
-This extension is also packaged by the community for many popular Linux distros
-— search your package manager.
-
-🧰 Features:
+Installation
 ----------------
 
-- Highly customizable
-- Supports both text and images
-- Allows pinning items to top
-- Includes a "private" mode
-- Has configurable shortcuts
-- Keyboard control
-
-In-Menu Keyboard Controls
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- Use arrows to navigate
-- :code:`v` to paste directly from menu
-- :code:`p` to pin item
-- :code:`<Delete>` to delete an item
-
-📦 Install from source
-----------------
-
-Installation via git is performed by cloning the repo into your local gnome-shell extensions directory (usually :code:`~/.local/share/gnome-shell/extensions/`)::
+Installation via git is performed by cloning the repo into your local gnome-shell extensions directory (usually ~/.local/share/gnome-shell/extensions/)::
 
     $ git clone https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git <extensions-dir>/clipboard-indicator@tudmotu.com
 
@@ -49,28 +19,13 @@ After cloning the repo, the extension is practically installed yet disabled. In 
     $ gnome-extensions enable clipboard-indicator@tudmotu.com
 
 
-✅ GNOME Version Support
+GNOME Version Support
 --------------------------
-Depending on your GNOME version, you will need to install the following
-Clipboard Indicator versions:
+With GNOME 40, many internal APIs were replaced which meant the extension had to drop backwards compatibility. Please note that versions v38 and v39 only support GNOME 40 and 41. Version v42 and later only supports GNOME 42 and above.
 
-* GNOME 45 and above:
+If you are using a GNOME version earlier than 40 (e.g. 3.38, 3.36, etc), please use v37 of this extension.
 
-  * Use latest version
-
-* GNOME 42-44
-
-  * v47
-
-* GNOME 40-41
-
-  * v39
-
-* GNOME <40
-
-  * v37
-
-⌨️ Contributing
+Contribution
 ----------------
 Contributions to this project are welcome.
 

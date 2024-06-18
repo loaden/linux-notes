@@ -13,23 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
+const GLib = imports.gi.GLib;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const PopupMenu = imports.ui.popupMenu;
+const Signals = imports.signals;
+const St = imports.gi.St;
 
-import Clutter from 'gi://Clutter';
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import GdkPixbuf from 'gi://GdkPixbuf';
-import Gio from 'gi://Gio';
-import St from 'gi://St';
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
 
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+const DBusInterfaces = Extension.imports.interfaces;
+const PromiseUtils = Extension.imports.promiseUtils;
+const Util = Extension.imports.util;
 
-import * as DBusInterfaces from './interfaces.js';
-import * as PromiseUtils from './promiseUtils.js';
-import * as Util from './util.js';
-import {DBusProxy} from './dbusProxy.js';
-
-Gio._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_async');
+PromiseUtils._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_async',
+    'new_from_stream_finish');
 
 // ////////////////////////////////////////////////////////////////////////
 // PART ONE: "ViewModel" backend implementation.
@@ -39,19 +38,20 @@ Gio._promisify(GdkPixbuf.Pixbuf, 'new_from_stream_async');
 /**
  * Saves menu property values and handles type checking and defaults
  */
-export class PropertyStore {
+var PropertyStore = class AppIndicatorsPropertyStore {
+
     constructor(initialProperties) {
         this._props = new Map();
 
         if (initialProperties) {
-            for (const [prop, value] of Object.entries(initialProperties))
-                this.set(prop, value);
+            for (let i in initialProperties)
+                this.set(i, initialProperties[i]);
+
         }
     }
 
     set(name, value) {
-        if (name in PropertyStore.MandatedTypes && value &&
-            !value.is_of_type(PropertyStore.MandatedTypes[name]))
+        if (name in PropertyStore.MandatedTypes && value && !value.is_of_type(PropertyStore.MandatedTypes[name]))
             Util.Logger.warn(`Cannot set property ${name}: type mismatch!`);
         else if (value)
             this._props.set(name, value);
@@ -60,7 +60,7 @@ export class PropertyStore {
     }
 
     get(name) {
-        const prop = this._props.get(name);
+        let prop = this._props.get(name);
         if (prop)
             return prop;
         else if (name in PropertyStore.DefaultValues)
@@ -68,7 +68,7 @@ export class PropertyStore {
         else
             return null;
     }
-}
+};
 
 // we list all the properties we know and use here, so we won' have to deal with unexpected type mismatches
 PropertyStore.MandatedTypes = {
@@ -94,11 +94,10 @@ PropertyStore.DefaultValues = {
 /**
  * Represents a single menu item
  */
-export class DbusMenuItem extends Signals.EventEmitter {
+var DbusMenuItem = class AppIndicatorsDbusMenuItem {
+
     // will steal the properties object
     constructor(client, id, properties, childrenIds) {
-        super();
-
         this._client = client;
         this._id = id;
         this._propStore = new PropertyStore(properties);
@@ -106,7 +105,7 @@ export class DbusMenuItem extends Signals.EventEmitter {
     }
 
     propertyGet(propName) {
-        const prop = this.propertyGetVariant(propName);
+        let prop = this.propertyGetVariant(propName);
         return prop ? prop.get_string()[0] : null;
     }
 
@@ -115,12 +114,12 @@ export class DbusMenuItem extends Signals.EventEmitter {
     }
 
     propertyGetBool(propName) {
-        const prop  = this.propertyGetVariant(propName);
+        let prop  = this.propertyGetVariant(propName);
         return prop ? prop.get_boolean() : false;
     }
 
     propertyGetInt(propName) {
-        const prop = this.propertyGetVariant(propName);
+        let prop = this.propertyGetVariant(propName);
         return prop ? prop.get_int32() : 0;
     }
 
@@ -128,11 +127,6 @@ export class DbusMenuItem extends Signals.EventEmitter {
         this._propStore.set(prop, value);
 
         this.emit('property-changed', prop, this.propertyGetVariant(prop));
-    }
-
-    resetProperties() {
-        Object.entries(PropertyStore.DefaultValues).forEach(([prop, value]) =>
-            this.propertySet(prop, value));
     }
 
     getChildrenIds() {
@@ -202,16 +196,17 @@ export class DbusMenuItem extends Signals.EventEmitter {
     sendAboutToShow() {
         this._client.sendAboutToShow(this._id);
     }
-}
+};
+Signals.addSignalMethods(DbusMenuItem.prototype);
 
 
 /**
  * The client does the heavy lifting of actually reading layouts and distributing events
  */
 
-export const DBusClient = GObject.registerClass({
-    Signals: {'ready-changed': {}},
-}, class AppIndicatorsDBusClient extends DBusProxy {
+var DBusClient = GObject.registerClass({
+    Signals: { 'ready-changed': {} },
+}, class AppIndicatorsDBusClient extends Util.DBusProxy {
     static get interfaceInfo() {
         if (!this._interfaceInfo) {
             this._interfaceInfo = Gio.DBusInterfaceInfo.new_for_xml(
@@ -234,7 +229,7 @@ export const DBusClient = GObject.registerClass({
     }
 
     _init(busName, objectPath) {
-        const {interfaceInfo} = AppIndicatorsDBusClient;
+        const { interfaceInfo } = AppIndicatorsDBusClient;
 
         super._init(busName, objectPath, interfaceInfo,
             Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES);
@@ -298,25 +293,23 @@ export const DBusClient = GObject.registerClass({
             [], cancellable);
 
         result.forEach(([id, properties]) => {
-            const item = this._items.get(id);
+            let item = this._items.get(id);
             if (!item)
                 return;
 
-            item.resetProperties();
-
-            for (const [prop, value] of Object.entries(properties))
-                item.propertySet(prop, value);
+            for (let prop in properties)
+                item.propertySet(prop, properties[prop]);
         });
     }
 
     // Traverses the list of cached menu items and removes everyone that is not in the list
     // so we don't keep alive unused items
     _gcItems() {
-        const tag = new Date().getTime();
+        let tag = new Date().getTime();
 
-        const toTraverse = [0];
+        let toTraverse = [0];
         while (toTraverse.length > 0) {
-            const item = this.getItem(toTraverse.shift());
+            let item = this.getItem(toTraverse.shift());
             item._dbusClientGcTag = tag;
             Array.prototype.push.apply(toTraverse, item.getChildrenIds());
         }
@@ -386,17 +379,17 @@ export const DBusClient = GObject.registerClass({
 
         if (menuItem) {
             // we do, update our properties if necessary
-            for (const [prop, value] of Object.entries(properties))
-                menuItem.propertySet(prop, value);
+            for (let prop in properties)
+                menuItem.propertySet(prop, properties[prop]);
 
             // make sure our children are all at the right place, and exist
-            const oldChildrenIds = menuItem.getChildrenIds();
+            let oldChildrenIds = menuItem.getChildrenIds();
             for (let i = 0; i < childrenIds.length; ++i) {
                 // try to recycle an old child
                 let oldChild = -1;
                 for (let j = 0; j < oldChildrenIds.length; ++j) {
                     if (oldChildrenIds[j] === childrenIds[i]) {
-                        [oldChild] = oldChildrenIds.splice(j, 1);
+                        oldChild = oldChildrenIds.splice(j, 1)[0];
                         break;
                     }
                 }
@@ -494,7 +487,7 @@ export const DBusClient = GObject.registerClass({
     }
 
     getItem(id) {
-        const item = this._items.get(id);
+        let item = this._items.get(id);
         if (!item)
             Util.Logger.warn(`trying to retrieve item for non-existing id ${id} !?`);
         return item || null;
@@ -502,9 +495,6 @@ export const DBusClient = GObject.registerClass({
 
     // we don't need to cache and burst-send that since it will not happen that frequently
     async sendAboutToShow(id) {
-        if (this._hasAboutToShow === false)
-            return;
-
         /* Some indicators (you, dropbox!) don't use the right signature
          * and don't return a boolean, so we need to support both cases */
         try {
@@ -517,11 +507,6 @@ export const DBusClient = GObject.registerClass({
                 ret.is_of_type(new GLib.VariantType('()')))
                 this._requestLayoutUpdate();
         } catch (e) {
-            if (e.matches(Gio.DBusError, Gio.DBusError.UNKNOWN_METHOD) ||
-                e.matches(Gio.DBusError, Gio.DBusError.FAILED)) {
-                this._hasAboutToShow = false;
-                return;
-            }
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 logError(e);
         }
@@ -539,15 +524,15 @@ export const DBusClient = GObject.registerClass({
 
     _onPropertiesUpdated([changed, removed]) {
         changed.forEach(([id, props]) => {
-            const item = this._items.get(id);
+            let item = this._items.get(id);
             if (!item)
                 return;
 
-            for (const [prop, value] of Object.entries(props))
-                item.propertySet(prop, value);
+            for (let prop in props)
+                item.propertySet(prop, props[prop]);
         });
         removed.forEach(([id, propNames]) => {
-            const item = this._items.get(id);
+            let item = this._items.get(id);
             if (!item)
                 return;
 
@@ -555,6 +540,11 @@ export const DBusClient = GObject.registerClass({
         });
     }
 });
+
+if (imports.system.version < 17101) {
+    /* In old versions wrappers are not applied to sub-classes, so let's do it */
+    DBusClient.prototype.init_async = Gio.DBusProxy.prototype.init_async;
+}
 
 // ////////////////////////////////////////////////////////////////////////
 // PART TWO: "View" frontend implementation.
@@ -590,7 +580,7 @@ const MenuItemFactory = {
         if (shellItem instanceof PopupMenu.PopupMenuItem) {
             shellItem._icon = new St.Icon({
                 style_class: 'popup-menu-icon',
-                xAlign: Clutter.ActorAlign.END,
+                x_align: St.Align.END,
             });
             shellItem.add_child(shellItem._icon);
             shellItem.label.x_expand = true;
@@ -720,7 +710,7 @@ const MenuItemFactory = {
     },
 
     _updateLabel() {
-        const label = this._dbusItem.propertyGet('label').replace(/_([^_])/, '$1');
+        let label = this._dbusItem.propertyGet('label').replace(/_([^_])/, '$1');
 
         if (this.label) // especially on GS3.8, the separator item might not even have a hidden label
             this.label.set_text(label);
@@ -730,11 +720,9 @@ const MenuItemFactory = {
         if (!this.setOrnament)
             return; // separators and alike might not have gotten the polyfill
 
-        if (this._dbusItem.propertyGet('toggle-type') === 'checkmark' &&
-            this._dbusItem.propertyGetInt('toggle-state'))
+        if (this._dbusItem.propertyGet('toggle-type') === 'checkmark' && this._dbusItem.propertyGetInt('toggle-state'))
             this.setOrnament(PopupMenu.Ornament.CHECK);
-        else if (this._dbusItem.propertyGet('toggle-type') === 'radio' &&
-                 this._dbusItem.propertyGetInt('toggle-state'))
+        else if (this._dbusItem.propertyGet('toggle-type') === 'radio' && this._dbusItem.propertyGetInt('toggle-state'))
             this.setOrnament(PopupMenu.Ornament.DOT);
         else
             this.setOrnament(PopupMenu.Ornament.NONE);
@@ -744,8 +732,8 @@ const MenuItemFactory = {
         if (!this._icon)
             return; // might be missing on submenus / separators
 
-        const iconName = this._dbusItem.propertyGet('icon-name');
-        const iconData = this._dbusItem.propertyGetVariant('icon-data');
+        let iconName = this._dbusItem.propertyGet('icon-name');
+        let iconData = this._dbusItem.propertyGetVariant('icon-data');
         if (iconName) {
             this._icon.icon_name = iconName;
         } else if (iconData) {
@@ -776,7 +764,7 @@ const MenuItemFactory = {
 
         // first, we need to find our old position
         let pos = -1;
-        const family = this._parent._getMenuItems();
+        let family = this._parent._getMenuItems();
         for (let i = 0; i < family.length; ++i) {
             if (family[i] === this)
                 pos = i;
@@ -802,7 +790,7 @@ const MenuUtils = {
         // HACK: we're really getting into the internals of the PopupMenu implementation
 
         // First, find our wrapper. Children tend to lie. We do not trust the old positioning.
-        const family = menu._getMenuItems();
+        let family = menu._getMenuItems();
         for (let i = 0; i < family.length; ++i) {
             if (family[i]._dbusItem === dbusItem) {
                 // now, remove it
@@ -827,10 +815,9 @@ const MenuUtils = {
  *
  * Something like a mini-god-object
  */
-export class Client extends Signals.EventEmitter {
-    constructor(busName, path, indicator) {
-        super();
+var Client = class AppIndicatorsClient {
 
+    constructor(busName, path, indicator) {
         this._busName  = busName;
         this._busPath  = path;
         this._client   = new DBusClient(busName, path);
@@ -927,6 +914,7 @@ export class Client extends Signals.EventEmitter {
             item.destroy();
         else
             this._itemsBeingAdded.delete(child);
+
     }
 
     _onRootChildMoved(dbusItem, child, oldpos, newpos) {
@@ -962,4 +950,5 @@ export class Client extends Signals.EventEmitter {
         this.indicator = null;
         this._itemsBeingAdded = null;
     }
-}
+};
+Signals.addSignalMethods(Client.prototype);

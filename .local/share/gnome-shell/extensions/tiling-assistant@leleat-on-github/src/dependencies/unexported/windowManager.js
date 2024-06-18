@@ -1,1 +1,0 @@
-export const WINDOW_ANIMATION_TIME = 250;

@@ -1,15 +1,20 @@
-import { Clutter, GLib, GObject, Meta, Mtk, Shell } from '../dependencies/gi.js';
-import { Main } from '../dependencies/shell.js';
-import { getWindows } from '../dependencies/unexported/altTab.js';
+'use strict';
 
-import { Orientation, Settings } from '../common.js';
-import { Rect, Util } from './utility.js';
+const { altTab: AltTab, main: Main } = imports.ui;
+const { Clutter, GLib, GObject, Meta, Shell, St } = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const { Orientation, Settings, Shortcuts } = Me.imports.src.common;
+const { Axis, Rect, Util } = Me.imports.src.extension.utility;
+const GNOME_VERSION = parseFloat(imports.misc.config.PACKAGE_VERSION);
 
 /**
  * Singleton responsible for tiling. Implement the signals in a separate Clutter
  * class so this doesn't need to be instanced.
  */
-export class TilingWindowManager {
+var TilingWindowManager = class TilingWindowManager {
     static initialize() {
         this._signals = new TilingSignals();
 
@@ -19,23 +24,16 @@ export class TilingWindowManager {
         // [windowIds]
         this._unmanagingWindows = [];
 
-        global.workspace_manager.connectObject(
-            'workspace-added',
-            this._onWorkspaceAdded.bind(this),
-            this
-        );
-        global.workspace_manager.connectObject(
-            'workspace-removed',
-            this._onWorkspaceRemoved.bind(this),
-            this
-        );
+        this._wsAddedId = global.workspace_manager.connect('workspace-added', this._onWorkspaceAdded.bind(this));
+        this._wsRemovedId = global.workspace_manager.connect('workspace-removed', this._onWorkspaceRemoved.bind(this));
     }
 
     static destroy() {
         this._signals.destroy();
         this._signals = null;
 
-        global.workspace_manager.disconnectObject(this);
+        global.workspace_manager.disconnect(this._wsAddedId);
+        global.workspace_manager.disconnect(this._wsRemovedId);
 
         this._tileGroups.clear();
         this._unmanagingWindows = [];
@@ -78,7 +76,7 @@ export class TilingWindowManager {
      */
     static getWindows(allWorkspaces = false) {
         const activeWs = global.workspace_manager.get_active_workspace();
-        const openWindows = getWindows(allWorkspaces ? null : activeWs);
+        const openWindows = AltTab.getWindows(allWorkspaces ? null : activeWs);
         // The open windows are not sorted properly when tiling with the Tiling
         // Popup because altTab sorts by focus.
         const sorted = global.display.sort_windows_by_stacking(openWindows);
@@ -127,7 +125,7 @@ export class TilingWindowManager {
      * @param {boolean} [fakeTile=false] don't create a new tile group, don't
      *      emit 'tiled' signal or open the Tiling Popup
      */
-    static async tile(window, newRect, {
+    static tile(window, newRect, {
         openTilingPopup = true,
         ignoreTA = false,
         monitorNr = null,
@@ -154,10 +152,7 @@ export class TilingWindowManager {
         window.unminimize();
         // Raise window since tiling with the popup means that
         // the window can be below others.
-        if (window.raise_and_make_recent_on_workspace)
-            window.raise_and_make_recent_on_workspace(global.workspace_manager.get_active_workspace());
-        else
-            window.raise_and_make_recent();
+        window.raise_and_make_recent?.() ?? window.raise();
 
         const oldRect = new Rect(window.get_frame_rect());
         const monitor = monitorNr ?? window.get_monitor();
@@ -168,7 +163,7 @@ export class TilingWindowManager {
         if (!window.untiledRect)
             window.untiledRect = oldRect;
 
-        if (maximize && !Settings.getBoolean('maximize-with-gap')) {
+        if (maximize && !Settings.getBoolean(Settings.MAXIMIZE_WITH_GAPS)) {
             window.tiledRect = null;
             // It's possible for a window to maximize() to the wrong monitor.
             // This is very easy to reproduce when dragging a window on the
@@ -187,7 +182,7 @@ export class TilingWindowManager {
 
         // Animations
         const wActor = window.get_compositor_private();
-        if (Settings.getBoolean('enable-tile-animations') && wActor && !skipAnim) {
+        if (Settings.getBoolean(Settings.ENABLE_TILE_ANIMATIONS) && wActor && !skipAnim) {
             wActor.remove_all_transitions();
             // HACK => journalctl: 'error in size change accounting'...?
             // TODO: no animation if going from maximized -> tiled and back to back multiple times?
@@ -225,7 +220,7 @@ export class TilingWindowManager {
         } else if (!fakeTile) {
             // Make the tile group only consist of the window itself to stop
             // resizing or raising together. Also don't call the Tiling Popup.
-            if (Settings.getBoolean('disable-tile-groups') || ignoreTA) {
+            if (Settings.getBoolean(Settings.DISABLE_TILE_GROUPS) || ignoreTA) {
                 this.updateTileGroup([window]);
                 return;
             }
@@ -237,7 +232,7 @@ export class TilingWindowManager {
             this.emit('window-tiled', window);
 
             if (openTilingPopup)
-                await this.tryOpeningTilingPopup();
+                this.tryOpeningTilingPopup();
         }
     }
 
@@ -266,13 +261,10 @@ export class TilingWindowManager {
         // one. So untiling the initial window after tiling more windows with
         // the popup (without re-focusing the initial window), means the
         // untiled window will be below the others.
-        if (window.raise_and_make_recent_on_workspace)
-            window.raise_and_make_recent_on_workspace(global.workspace_manager.get_active_workspace());
-        else
-            window.raise_and_make_recent();
+        window.raise_and_make_recent?.() ?? window.raise();
 
         // Animation
-        const untileAnim = Settings.getBoolean('enable-untile-animations');
+        const untileAnim = Settings.getBoolean(Settings.ENABLE_UNTILE_ANIMATIONS);
         const wActor = window.get_compositor_private();
         if (untileAnim && !wasMaximized && wActor && !skipAnim) {
             wActor.remove_all_transitions();
@@ -430,7 +422,7 @@ export class TilingWindowManager {
 
             const raiseId = window.connect('raised', raisedWindow => {
                 const raisedWindowId = raisedWindow.get_id();
-                if (Settings.getBoolean('enable-raise-tile-group')) {
+                if (Settings.getBoolean(Settings.RAISE_TILE_GROUPS)) {
                     const raisedWindowsTileGroup = this._tileGroups.get(raisedWindowId);
                     raisedWindowsTileGroup.forEach(wId => {
                         const w = this._getWindow(wId);
@@ -446,10 +438,7 @@ export class TilingWindowManager {
 
                         // Prevent an infinite loop of windows raising each other
                         w.block_signal_handler(otherRaiseId);
-                        if (w.raise_and_make_recent_on_workspace)
-                            w.raise_and_make_recent_on_workspace(global.workspace_manager.get_active_workspace());
-                        else
-                            w.raise_and_make_recent();
+                        w.raise_and_make_recent?.() ?? w.raise();
                         w.unblock_signal_handler(otherRaiseId);
                     });
 
@@ -458,10 +447,7 @@ export class TilingWindowManager {
                     // it may be below other tiled windows.
                     const signalId = this._signals.getSignalsFor(raisedWindowId).get(TilingSignals.RAISE);
                     raisedWindow.block_signal_handler(signalId);
-                    if (raisedWindow.raise_and_make_recent_on_workspace)
-                        raisedWindow.raise_and_make_recent_on_workspace(global.workspace_manager.get_active_workspace());
-                    else
-                        raisedWindow.raise_and_make_recent();
+                    raisedWindow.raise_and_make_recent?.() ?? raisedWindow.raise();
                     raisedWindow.unblock_signal_handler(signalId);
                 }
 
@@ -547,8 +533,8 @@ export class TilingWindowManager {
         // tile group. Same thing for the setting 'Disable Tile Groups' because
         // it's implemented by just making the tile groups consist of single
         // windows (the tiled window itself).
-        if (Settings.getBoolean('enable-raise-tile-group') ||
-            Settings.getBoolean('disable-tile-groups')
+        if (Settings.getBoolean(Settings.RAISE_TILE_GROUPS) ||
+            Settings.getBoolean(Settings.DISABLE_TILE_GROUPS)
         ) {
             const openWindows = this.getWindows();
             if (!openWindows.length)
@@ -699,7 +685,7 @@ export class TilingWindowManager {
 
             // Orientation doesn't matter here since we are always comparing sides
             // of the same orientation. So just make the side always horizontal.
-            const makeSide = (startPoint, endPoint) => new Mtk.Rectangle({
+            const makeSide = (startPoint, endPoint) => new Meta.Rectangle({
                 x: startPoint,
                 width: endPoint - startPoint,
                 height: 1
@@ -799,12 +785,12 @@ export class TilingWindowManager {
      * isn't limited to just keyboard shortcuts. This is also used when
      * dnd-ing a window.
      *
-     * Examples: 'tile-left-half' gets the left-most rectangle with the height
-     * of the workArea. 'tile-bottomleft-quarter' gets the rectangle touching the
+     * Examples: Shortcuts.LEFT gets the left-most rectangle with the height
+     * of the workArea. Shortcuts.BOTTOM_LEFT gets the rectangle touching the
      * bottom left screen corner etc... If there is no other rect to adapt to
      * we default to half the workArea.
      *
-     * @param {string} shortcut the side / quarter to get the tile rect for.
+     * @param {Shortcuts} shortcut the side / quarter to get the tile rect for.
      * @param {Rect} workArea the workArea.
      * @param {number} [monitor=null] the monitor number we want to get the
      *      rect for. This may not always be the current monitor. It is only
@@ -815,7 +801,7 @@ export class TilingWindowManager {
      */
     static getTileFor(shortcut, workArea, monitor = null) {
         // Don't try to adapt a tile rect
-        if (Settings.getBoolean('disable-tile-groups'))
+        if (Settings.getBoolean(Settings.DISABLE_TILE_GROUPS))
             return this.getDefaultTileFor(shortcut, workArea);
 
         const topTileGroup = this.getTopTileGroup({ skipTopWindow: true, monitor });
@@ -829,7 +815,7 @@ export class TilingWindowManager {
         const idx = topTileGroup.indexOf(global.display.focus_window);
         idx !== -1 && topTileGroup.splice(idx, 1);
         const favLayout = Util.getFavoriteLayout(monitor);
-        const useFavLayout = favLayout.length && Settings.getBoolean('adapt-edge-tiling-to-favorite-layout');
+        const useFavLayout = favLayout.length && Settings.getBoolean(Settings.ADAPT_EDGE_TILING_TO_FAVORITE_LAYOUT);
         const twRects = useFavLayout && favLayout || topTileGroup.map(w => w.tiledRect);
 
         if (!twRects.length)
@@ -848,50 +834,50 @@ export class TilingWindowManager {
 
         const screenRects = twRects.concat(workArea.minus(twRects));
         switch (shortcut) {
-            case 'tile-maximize': {
+            case Shortcuts.MAXIMIZE: {
                 return workArea.copy();
-            } case 'tile-left-half': {
+            } case Shortcuts.LEFT: {
                 const left = screenRects.find(r => r.x === workArea.x && r.width !== workArea.width);
                 const { width } = left ?? workArea.getUnitAt(0, workArea.width / 2, Orientation.V);
                 const result = new Rect(workArea.x, workArea.y, width, workArea.height);
                 return getTile(result);
-            } case 'tile-right-half': {
+            } case Shortcuts.RIGHT: {
                 const right = screenRects.find(r => r.x2 === workArea.x2 && r.width !== workArea.width);
                 const { width } = right ?? workArea.getUnitAt(1, workArea.width / 2, Orientation.V);
                 const result = new Rect(workArea.x2 - width, workArea.y, width, workArea.height);
                 return getTile(result);
-            } case 'tile-top-half': {
+            } case Shortcuts.TOP: {
                 const top = screenRects.find(r => r.y === workArea.y && r.height !== workArea.height);
                 const { height } = top ?? workArea.getUnitAt(0, workArea.height / 2, Orientation.H);
                 const result = new Rect(workArea.x, workArea.y, workArea.width, height);
                 return getTile(result);
-            } case 'tile-bottom-half': {
+            } case Shortcuts.BOTTOM: {
                 const bottom = screenRects.find(r => r.y2 === workArea.y2 && r.height !== workArea.height);
                 const { height } = bottom ?? workArea.getUnitAt(1, workArea.height / 2, Orientation.H);
                 const result = new Rect(workArea.x, workArea.y2 - height, workArea.width, height);
                 return getTile(result);
-            } case 'tile-topleft-quarter': {
+            } case Shortcuts.TOP_LEFT: {
                 const left = screenRects.find(r => r.x === workArea.x && r.width !== workArea.width);
                 const { width } = left ?? workArea.getUnitAt(0, workArea.width / 2, Orientation.V);
                 const top = screenRects.find(r => r.y === workArea.y && r.height !== workArea.height);
                 const { height } = top ?? workArea.getUnitAt(0, workArea.height / 2, Orientation.H);
                 const result = new Rect(workArea.x, workArea.y, width, height);
                 return getTile(result);
-            } case 'tile-topright-quarter': {
+            } case Shortcuts.TOP_RIGHT: {
                 const right = screenRects.find(r => r.x2 === workArea.x2 && r.width !== workArea.width);
                 const { width } = right ?? workArea.getUnitAt(1, workArea.width / 2, Orientation.V);
                 const top = screenRects.find(r => r.y === workArea.y && r.height !== workArea.height);
                 const { height } = top ?? workArea.getUnitAt(0, workArea.height / 2, Orientation.H);
                 const result = new Rect(workArea.x2 - width, workArea.y, width, height);
                 return getTile(result);
-            } case 'tile-bottomleft-quarter': {
+            } case Shortcuts.BOTTOM_LEFT: {
                 const left = screenRects.find(r => r.x === workArea.x && r.width !== workArea.width);
                 const { width } = left ?? workArea.getUnitAt(0, workArea.width / 2, Orientation.V);
                 const bottom = screenRects.find(r => r.y2 === workArea.y2 && r.height !== workArea.height);
                 const { height } = bottom ?? workArea.getUnitAt(1, workArea.height / 2, Orientation.H);
                 const result = new Rect(workArea.x, workArea.y2 - height, width, height);
                 return getTile(result);
-            } case 'tile-bottomright-quarter': {
+            } case Shortcuts.BOTTOM_RIGHT: {
                 const right = screenRects.find(r => r.x2 === workArea.x2 && r.width !== workArea.width);
                 const { width } = right ?? workArea.getUnitAt(1, workArea.width / 2, Orientation.V);
                 const bottom = screenRects.find(r => r.y2 === workArea.y2 && r.height !== workArea.height);
@@ -903,37 +889,37 @@ export class TilingWindowManager {
     }
 
     /**
-     * @param {string} shortcut determines, which half/quarter to get the tile for
+     * @param {Shortcuts} shortcut determines, which half/quarter to get the tile for
      * @param {Rect} workArea
      * @returns
      */
     static getDefaultTileFor(shortcut, workArea) {
         switch (shortcut) {
-            case 'tile-maximize':
+            case Shortcuts.MAXIMIZE:
                 return workArea.copy();
-            case 'tile-left-half':
-            case 'tile-left-half-ignore-ta':
+            case Shortcuts.LEFT:
+            case Shortcuts.LEFT_IGNORE_TA:
                 return workArea.getUnitAt(0, workArea.width / 2, Orientation.V);
-            case 'tile-right-half':
-            case 'tile-right-half-ignore-ta':
+            case Shortcuts.RIGHT:
+            case Shortcuts.RIGHT_IGNORE_TA:
                 return workArea.getUnitAt(1, workArea.width / 2, Orientation.V);
-            case 'tile-top-half':
-            case 'tile-top-half-ignore-ta':
+            case Shortcuts.TOP:
+            case Shortcuts.TOP_IGNORE_TA:
                 return workArea.getUnitAt(0, workArea.height / 2, Orientation.H);
-            case 'tile-bottom-half':
-            case 'tile-bottom-half-ignore-ta':
+            case Shortcuts.BOTTOM:
+            case Shortcuts.BOTTOM_IGNORE_TA:
                 return workArea.getUnitAt(1, workArea.height / 2, Orientation.H);
-            case 'tile-topleft-quarter':
-            case 'tile-topleft-quarter-ignore-ta':
+            case Shortcuts.TOP_LEFT:
+            case Shortcuts.TOP_LEFT_IGNORE_TA:
                 return workArea.getUnitAt(0, workArea.width / 2, Orientation.V).getUnitAt(0, workArea.height / 2, Orientation.H);
-            case 'tile-topright-quarter':
-            case 'tile-topright-quarter-ignore-ta':
+            case Shortcuts.TOP_RIGHT:
+            case Shortcuts.TOP_RIGHT_IGNORE_TA:
                 return workArea.getUnitAt(1, workArea.width / 2, Orientation.V).getUnitAt(0, workArea.height / 2, Orientation.H);
-            case 'tile-bottomleft-quarter':
-            case 'tile-bottomleft-quarter-ignore-ta':
+            case Shortcuts.BOTTOM_LEFT:
+            case Shortcuts.BOTTOM_LEFT_IGNORE_TA:
                 return workArea.getUnitAt(0, workArea.width / 2, Orientation.V).getUnitAt(1, workArea.height / 2, Orientation.H);
-            case 'tile-bottomright-quarter':
-            case 'tile-bottomright-quarter-ignore-ta':
+            case Shortcuts.BOTTOM_RIGHT:
+            case Shortcuts.BOTTOM_RIGHT_IGNORE_TA:
                 return workArea.getUnitAt(1, workArea.width / 2, Orientation.V).getUnitAt(1, workArea.height / 2, Orientation.H);
         }
     }
@@ -942,11 +928,11 @@ export class TilingWindowManager {
      * Opens the Tiling Popup, if there is unambiguous free screen space,
      * and offer to tile an open window to that spot.
      */
-    static async tryOpeningTilingPopup() {
-        if (!Settings.getBoolean('enable-tiling-popup'))
+    static tryOpeningTilingPopup() {
+        if (!Settings.getBoolean(Settings.ENABLE_TILING_POPUP))
             return;
 
-        const allWs = Settings.getBoolean('tiling-popup-all-workspace');
+        const allWs = Settings.getBoolean(Settings.POPUP_ALL_WORKSPACES);
         const openWindows = this.getWindows(allWs);
         const topTileGroup = this.getTopTileGroup();
         topTileGroup.forEach(w => openWindows.splice(openWindows.indexOf(w), 1));
@@ -959,7 +945,7 @@ export class TilingWindowManager {
         if (!freeSpace)
             return;
 
-        const TilingPopup = await import('./tilingPopup.js');
+        const TilingPopup = Me.imports.src.extension.tilingPopup;
         const popup = new TilingPopup.TilingSwitcherPopup(openWindows, freeSpace);
         if (!popup.show(topTileGroup))
             popup.destroy();
@@ -1298,7 +1284,7 @@ export class TilingWindowManager {
             this.untile(window, { restoreFullPos: false, clampToWorkspace: true, skipAnim: Main.overview.visible });
         }
     }
-}
+};
 
 /**
  * This is instanced by the 'TilingWindowManager'. It implements the tiling

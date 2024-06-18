@@ -1,20 +1,29 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-import {Gio} from './dependencies/gi.js';
-import {Main} from './dependencies/shell/ui.js';
+/* exported NotificationsMonitor */
 
-import {
-    Docking,
-    Utils,
-} from './imports.js';
+const { signals: Signals } = imports;
 
-const {signals: Signals} = imports;
+const {
+    Gio,
+} = imports.gi;
 
+const {
+    main: Main,
+} = imports.ui;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const {
+    docking: Docking,
+    utils: Utils,
+} = Me.imports;
 const Labels = Object.freeze({
     SOURCES: Symbol('sources'),
     NOTIFICATIONS: Symbol('notifications'),
 });
-export class NotificationsMonitor {
+var NotificationsMonitor = class NotificationsManagerImpl {
     constructor() {
         this._settings = new Gio.Settings({
             schema_id: 'org.gnome.desktop.notifications',
@@ -115,6 +124,6 @@ export class NotificationsMonitor {
 
         this.emit('changed');
     }
-}
+};
 
 Signals.addSignalMethods(NotificationsMonitor.prototype);
