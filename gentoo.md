@@ -24,6 +24,8 @@
   cdrom gentoo key livecd
   ```
 
+  * 注意修改实际分区名
+
 ### 下载 *stage3*
 
 * *Ctrl+Alt+F2* 切换到 tty2
@@ -55,6 +57,8 @@
   chroot /mnt/gentoo /bin/bash
   ```
 
+  * 注意修改实际分区名
+
 * 执行脚本批量挂载并切换到目标系统
   > `# /mnt/gentoo/chroot.sh`
 
@@ -71,7 +75,8 @@
   COMMON_FLAGS="-march=native -O2 -pipe"
 
   ACCEPT_LICENSE="*"
-  GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo/"
+  GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
+  USE="vpx screencast -gnome-online-accounts"
   ```
 
   * 获取配置信息
@@ -138,7 +143,7 @@
   sync-uri = https://mirrors.bfsu.edu.cn/gentoo/releases/amd64/binpackages/23.0/x86-64-v3/
   ```
 
-  * 可选择全局选项
+  * 可选择全局选项（不建议）
   > `# nano /etc/portage/make.conf`
 
   ```text
@@ -381,13 +386,13 @@ polkit.addAdminRule(function(action, subject) {
 * 批量安装
 
   ```shell
-  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious tencent-qq gimp obs-studio kdenlive flameshot
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio kdenlive flameshot
   ```
 
 ### 扩展软件
 
   ```shell
-  # emerge -avug --autounmask wps-office dingtalk wechat-universal-bwrap fastfetch xlsclients
+  # emerge -avug --autounmask wps-office dingtalk tencent-qq wechat fastfetch xlsclients
   ```
 
 ### 远程桌面
@@ -582,122 +587,6 @@ polkit.addAdminRule(function(action, subject) {
 * 方法一：GNOME添加快捷键命令
   > `script --command "flameshot gui"`
 * 方法二：终端运行 `nohup flameshot &`
-
-## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
-
-* 选择 `default/linux/amd64/23.0/desktop/systemd` 配置文件
-
-  ```shell
-  # eselect profile list
-  # eselect profile set <序号>
-  # eselect profile show
-  ```
-
-### 网络
-
-  ```shell
-  # euse -p net-wireless/iwd standalone wired
-  # emerge -av iwd
-  # systemctl enable iwd
-  ```
-
-### [桌面](.config/sway/)
-  >
-  > `# emerge -av sway`
-
-### [顶栏](.config/waybar/)
-
-  ```shell
-  # euse -p gui-apps/waybar -E network pulseaudio tray wifi
-  # emerge -av --autounmask waybar
-  # dispatch-conf
-  # emerge -av --autounmask =fontawesome-6.1.1
-  # dispatch-conf
-  ```
-
-### 启动器
-  >
-  > `# emerge -av --autounmask wofi`
-
-### [终端](.config/foot/foot.ini)
-  >
-  > `# emerge -av foot`
-
-### [通知](.config/mako/config)
-  >
-  > `# emerge -av gui-apps/mako`
-
-### 登录管理器
-
-  ```shell
-  # emerge -av --autounmask tuigreet
-  # systemctl enable greetd
-  ```
-
-* 修改配置
-    > `# nano /etc/greetd/config.toml`
-
-    ```text
-    command = "tuigreet --cmd sway"
-    ```
-
-* 如果登录界面被日志覆盖
-    > `# nano /etc/default/grub`
-
-    ```text
-    GRUB_CMDLINE_LINUX="quiet"
-    ```
-
-### [触控板](.config/sway/config)
-
-  ```text
-  input "1267:23:Elan_Touchpad" {
-    dwt enabled
-    tap enabled
-    natural_scroll enabled
-    middle_emulation enabled
-  }
-  ```
-
-### 环境变量
-  >
-  > `# nano /etc/environment`
-
-  ```text
-  XDG_CURRENT_DESKTOP=sway
-  XDG_SESSION_DESKTOP=sway
-  ```
-
-### 文件管理器
-
-  > `# emerge -av thunar thunar-archive-plugin thunar-volman tumbler xarchiver`
-
-* Thunar 右键终端
-
-  当提示错误`无法启动类别“TerminalEmulator”的首选应用程序。`时，可以修改[配置文件](.config/xfce4/helpers.rc)，添加内容：
-  > TerminalEmulator=foot
-
-### 其他安装
-
-* 文本编辑器
-  > `# emerge -av leafpad`
-* 视频播放器
-  > `# emerge -av mpv`
-* 音乐播放器
-  > `# emerge -av audacious`
-* 看图
-  > `# emerge -av imv`
-* 浏览器
-  > `# emerge -av microsoft-edge`
-* 开发
-  > `# emerge -av vscode`
-
-### 创建用户目录
-
-  ```shell
-  # emerge -av1 xdg-user-dirs
-  $ xdg-user-dirs-update --force
-  ```
 
 ## Gentoo 定制内核
 
