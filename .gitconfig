@@ -8,6 +8,3 @@
 	spellingdictionary = en
 [pull]
 	rebase = false
-[http "https://github.com"]
-	proxy = 127.0.0.1:26501
-	sslverify = false
