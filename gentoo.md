@@ -588,7 +588,7 @@ polkit.addAdminRule(function(action, subject) {
   > `script --command "flameshot gui"`
 * 方法二：终端运行 `nohup flameshot &`
 
-## Gentoo 定制内核
+## Gentoo 定制内核 <可忽略>
 
 ### 下载与选择源码
 
@@ -639,7 +639,7 @@ polkit.addAdminRule(function(action, subject) {
   >
   > .bin/kernel.sh
 
-## Gentoo 程序开发
+## Gentoo 程序开发 <可忽略>
 
 ### Rust 环境配置
 
