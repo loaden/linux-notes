@@ -556,8 +556,7 @@ polkit.addAdminRule(function(action, subject) {
   > `# tail -f /var/log/emerge-fetch.log`
 
   通过 <https://gh.api.99988866.xyz> Github下载加速，
-  将下载到的包拷贝到缓存目录 `/var/cache/distfiles`，
-  再次运行更新命令即可。
+  将下载到的包拷贝到缓存目录 `/var/cache/distfiles`，删除与该文件相关的lock隐藏文件及下载缓存文件，再次运行更新命令即可。
 
 ### 查询服务
 
