@@ -549,6 +549,16 @@ polkit.addAdminRule(function(action, subject) {
   >
   > `$ eix xdg-desktop- --installed`
 
+### 更新时 Github 下载包失败
+
+  部分ebuild需要从github.com下载包，但墙的原因，可能会下载失败，此时可通过命令获取需要下载包的链接地址。
+  >
+  > `# tail -f /var/log/emerge-fetch.log`
+
+  通过 <https://gh.api.99988866.xyz> Github下载加速，
+  将下载到的包拷贝到缓存目录 `/var/cache/distfiles`，
+  再次运行更新命令即可。
+
 ### 查询服务
 
   ```shell
