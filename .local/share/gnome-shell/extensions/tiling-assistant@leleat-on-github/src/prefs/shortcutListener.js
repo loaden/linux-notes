@@ -1,4 +1,9 @@
-import { Adw, Gdk, GObject, Gtk } from '../dependencies/prefs/gi.js';
+'use strict';
+
+const { Adw, Gdk, Gio, GObject, Gtk } = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
 /**
  * A Widget to implement the shortcuts in the preference window.
@@ -10,9 +15,9 @@ import { Adw, Gdk, GObject, Gtk } from '../dependencies/prefs/gi.js';
  * https://gitlab.com/rmnvgr/nightthemeswitcher-gnome-shell-extension/-/blob/main/src/utils.js
  */
 
-export const ShortcutListener = GObject.registerClass({
+var ShortcutListener = GObject.registerClass({
     GTypeName: 'ShortcutListener',
-    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
+    Template: Gio.File.new_for_path(`${Me.path}/src/ui/shortcutListener.ui`).get_uri(),
     InternalChildren: ['keybindingLabel', 'clearButton', 'eventKeyController'],
     Properties: {
         keybinding: GObject.ParamSpec.string(

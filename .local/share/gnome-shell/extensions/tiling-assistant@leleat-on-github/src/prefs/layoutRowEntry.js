@@ -1,13 +1,21 @@
-import { Gio, Gtk, GObject } from '../dependencies/prefs/gi.js';
-import { _ } from '../dependencies/prefs.js';
+'use strict';
+
+const { Gio, Gtk, GObject } = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
 
 /**
  * Multiple LayoutRowEntries make up a LayoutRow.js. See that file for more info.
  */
 
-export const LayoutRowEntry = GObject.registerClass({
+var LayoutRowEntry = GObject.registerClass({
     GTypeName: 'TilingLayoutRowEntry',
-    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
+    Template: Gio.File.new_for_path(`${Me.path}/src/ui/layoutRowEntry.ui`).get_uri(),
     InternalChildren: [
         'rectEntry',
         'rectLabel',

@@ -1,11 +1,15 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-import {Gio} from './dependencies/gi.js';
-import {DBusMenuUtils} from './imports.js';
+/* exported LauncherEntryRemoteModel */
 
-const DBusMenu = await DBusMenuUtils.haveDBusMenu();
+const { Gio } = imports.gi;
 
-export class LauncherEntryRemoteModel {
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { dbusmenuUtils: DbusmenuUtils } = Me.imports;
+
+const Dbusmenu = DbusmenuUtils.haveDBusMenu();
+
+var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
     constructor() {
         this._entrySourceStacks = new Map();
         this._remoteMaps = new Map();
@@ -115,7 +119,7 @@ export class LauncherEntryRemoteModel {
             remoteMap.set(appId, remote = Object.assign({}, launcherEntryDefaults));
 
         for (const name in properties) {
-            if (name === 'quicklist' && DBusMenu) {
+            if (name === 'quicklist' && Dbusmenu) {
                 const quicklistPath = properties[name].unpack();
                 if (quicklistPath &&
                     (!remote._quicklistMenuClient ||
@@ -128,7 +132,7 @@ export class LauncherEntryRemoteModel {
                         // This property should not be enumerable
                         Object.defineProperty(remote, '_quicklistMenuClient', {
                             writable: true,
-                            value: menuClient = new DBusMenu.Client({
+                            value: menuClient = new Dbusmenu.Client({
                                 dbus_name: senderName,
                                 dbus_object: quicklistPath,
                             }),
@@ -144,7 +148,7 @@ export class LauncherEntryRemoteModel {
                             }
                         }
                     };
-                    menuClient.connect(DBusMenu.CLIENT_SIGNAL_ROOT_CHANGED, handler);
+                    menuClient.connect(Dbusmenu.CLIENT_SIGNAL_ROOT_CHANGED, handler);
                 }
             } else {
                 remote[name] = properties[name].unpack();
@@ -154,7 +158,7 @@ export class LauncherEntryRemoteModel {
         const sourceStack = this._lookupStackById(appId);
         sourceStack.target._emitChangedEvents(sourceStack.update(remote));
     }
-}
+};
 
 const launcherEntryDefaults = Object.freeze({
     count: 0,
@@ -178,7 +182,7 @@ const LauncherEntry = class DashToDockLauncherEntry {
 
         callback(this, this);
         const id = this._nextId++;
-        const handler = {id, callback};
+        const handler = { id, callback };
         eventNames.forEach(name => {
             let handlerList = this._handlers.get(name);
             if (!handlerList)

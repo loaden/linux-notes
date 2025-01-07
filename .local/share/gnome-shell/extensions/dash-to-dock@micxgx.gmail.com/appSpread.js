@@ -1,15 +1,16 @@
-import {Atk, Clutter} from './dependencies/gi.js';
+/* exported AppSpread */
 
-import {
-    Main,
-    SearchController,
-    Workspace,
-    WorkspaceThumbnail,
-} from './dependencies/shell/ui.js';
+const { Atk, Clutter } = imports.gi;
 
-import {Utils} from './imports.js';
+const Main = imports.ui.main;
+const SearchController = imports.ui.searchController;
+const Workspace = imports.ui.workspace;
+const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 
-export class AppSpread {
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { utils: Utils } = Me.imports;
+
+var AppSpread = class AppSpread {
     constructor() {
         this.app = null;
         this.supported = true;
@@ -57,7 +58,7 @@ export class AppSpread {
     }
 
     _restoreDefaultWindows() {
-        const {workspaceManager} = global;
+        const { workspaceManager } = global;
 
         for (let i = 0; i < workspaceManager.nWorkspaces; i++) {
             const metaWorkspace = workspaceManager.get_workspace_by_index(i);
@@ -66,7 +67,7 @@ export class AppSpread {
     }
 
     _filterWindows() {
-        const {workspaceManager} = global;
+        const { workspaceManager } = global;
 
         for (let i = 0; i < workspaceManager.nWorkspaces; i++) {
             const metaWorkspace = workspaceManager.get_workspace_by_index(i);
@@ -139,7 +140,7 @@ export class AppSpread {
                 activitiesButton.constructor.prototype,
                 'key_release_event',
                 function (keyEvent) {
-                    const {keyval} = keyEvent;
+                    const { keyval } = keyEvent;
                     if (keyval === Clutter.KEY_Return || keyval === Clutter.KEY_space) {
                         if (Main.overview.shouldToggleByCornerOrButton())
                             appSpread._restoreDefaultOverview();
@@ -207,4 +208,4 @@ export class AppSpread {
         if (Main.overview.searchEntry)
             Main.overview.searchEntry.opacity = 255;
     }
-}
+};

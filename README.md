@@ -8,7 +8,7 @@
 
 * [Gentoo](https://www.gentoo.org/) ***工作学习倶优，推荐***
   > [gentoo.md](gentoo.md)
-* [ArchLinux](https://archlinux.org/) *适合工作，难度低*
+* [ArchLinux](https://archlinux.org/) *适合测试*
   > [arch.md](arch.md)
 * [LFS](https://github.com/loaden/bash-lfs) *适合研究*
   > `https://github.com/loaden/bash-lfs`

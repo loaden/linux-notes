@@ -1,8 +1,0 @@
-CFLAGS="-flto=auto -march=native -O2 -pipe"
-CXXFLAGS="${CFLAGS}"
-
-CC="gcc"
-CXX="g++"
-AR="gcc-ar"
-NM="gcc-nm"
-RANLIB="gcc-ranlib"

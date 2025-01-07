@@ -14,15 +14,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-export let StatusNotifierItem = null;
-export let StatusNotifierWatcher = null;
-export let DBusMenu = null;
+/* exported StatusNotifierItem, StatusNotifierWatcher, DBusMenu */
+
+var StatusNotifierItem = loadInterfaceXml('StatusNotifierItem.xml');
+var StatusNotifierWatcher = loadInterfaceXml('StatusNotifierWatcher.xml');
+var DBusMenu = loadInterfaceXml('DBusMenu.xml');
 
 // loads a xml file into an in-memory string
-function loadInterfaceXml(extension, filename) {
+function loadInterfaceXml(filename) {
+    const extension = imports.misc.extensionUtils.getCurrentExtension();
     const interfacesDir = extension.dir.get_child('interfaces-xml');
     const file = interfacesDir.get_child(filename);
-    const [result, contents] = imports.gi.GLib.file_get_contents(file.get_path());
+    let [result, contents] = imports.gi.GLib.file_get_contents(file.get_path());
 
     if (result) {
         // HACK: The "" + trick is important as hell because file_get_contents returns
@@ -30,23 +33,10 @@ function loadInterfaceXml(extension, filename) {
         // Otherwise, it will try to check `instanceof XML` and fail miserably because there
         // is no `XML` on very recent SpiderMonkey releases (or, if SpiderMonkey is old enough,
         // will spit out a TypeError soon).
-        let nodeContents = contents;
         if (contents instanceof Uint8Array)
-            nodeContents = imports.byteArray.toString(contents);
-        return `<node>${nodeContents}</node>`;
+            contents = imports.byteArray.toString(contents);
+        return `<node>${contents}</node>`;
     } else {
         throw new Error(`AppIndicatorSupport: Could not load file: ${filename}`);
     }
-}
-
-export function initialize(extension) {
-    StatusNotifierItem = loadInterfaceXml(extension, 'StatusNotifierItem.xml');
-    StatusNotifierWatcher = loadInterfaceXml(extension, 'StatusNotifierWatcher.xml');
-    DBusMenu = loadInterfaceXml(extension, 'DBusMenu.xml');
-}
-
-export function destroy() {
-    StatusNotifierItem = null;
-    StatusNotifierWatcher = null;
-    DBusMenu = null;
 }

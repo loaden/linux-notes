@@ -1,17 +1,18 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-import {
+const {
     GLib,
     Meta,
     Shell,
-} from './dependencies/gi.js';
+} = imports.gi;
 
-import {
-    Docking,
-    Utils,
-} from './imports.js';
+const { signals: Signals } = imports;
 
-const {signals: Signals} = imports;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
+    docking: Docking,
+    utils: Utils,
+} = Me.imports;
 
 // A good compromise between reactivity and efficiency; to be tuned.
 const INTELLIHIDE_CHECK_INTERVAL = 100;
@@ -51,7 +52,7 @@ const ignoreApps = ['com.rastersoft.ding', 'com.desktop.ding'];
  * Intallihide object: emit 'status-changed' signal when the overlap of windows
  * with the provided targetBoxClutter.ActorBox changes;
  */
-export class Intellihide {
+var Intellihide = class DashToDockIntellihide {
     constructor(monitorIndex) {
         // Load settings
         this._monitorIndex = monitorIndex;
@@ -283,14 +284,14 @@ export class Intellihide {
 
         case IntellihideMode.MAXIMIZED_WINDOWS:
             // Skip unmaximized windows
-            if (!metaWin.maximized_vertically && !metaWin.maximized_horizontally && !metaWin.fullscreen)
+            if (!metaWin.maximized_vertically && !metaWin.maximized_horizontally)
                 return false;
             break;
 
         case IntellihideMode.ALWAYS_ON_TOP:
             // Always on top, except for fullscreen windows
             if (this._focusApp) {
-                const {focusWindow} = global.display;
+                const { focusWindow } = global.display;
                 if (!focusWindow?.fullscreen)
                     return false;
             }
@@ -324,7 +325,7 @@ export class Intellihide {
 
         const wtype = metaWindow.get_window_type();
         for (let i = 0; i < handledWindowTypes.length; i++) {
-            const hwtype = handledWindowTypes[i];
+            var hwtype = handledWindowTypes[i];
             if (hwtype === wtype)
                 return true;
             else if (hwtype > wtype)
@@ -332,6 +333,6 @@ export class Intellihide {
         }
         return false;
     }
-}
+};
 
 Signals.addSignalMethods(Intellihide.prototype);

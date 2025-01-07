@@ -24,6 +24,8 @@
   cdrom gentoo key livecd
   ```
 
+  * 注意修改实际分区名
+
 ### 下载 *stage3*
 
 * *Ctrl+Alt+F2* 切换到 tty2
@@ -55,6 +57,8 @@
   chroot /mnt/gentoo /bin/bash
   ```
 
+  * 注意修改实际分区名
+
 * 执行脚本批量挂载并切换到目标系统
   > `# /mnt/gentoo/chroot.sh`
 
@@ -71,7 +75,8 @@
   COMMON_FLAGS="-march=native -O2 -pipe"
 
   ACCEPT_LICENSE="*"
-  GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo/"
+  GENTOO_MIRRORS="https://mirrors.bfsu.edu.cn/gentoo"
+  USE="vpx screencast -gnome-online-accounts"
   ```
 
   * 获取配置信息
@@ -115,7 +120,7 @@
 
   ```shell
   $ eselect profile list
-  # eselect profile set <number>
+  # eselect profile set <序号>
   $ eselect profile show
   ```
 
@@ -138,7 +143,7 @@
   sync-uri = https://mirrors.bfsu.edu.cn/gentoo/releases/amd64/binpackages/23.0/x86-64-v3/
   ```
 
-  * 可选择全局选项
+  * 可选择全局选项（不建议）
   > `# nano /etc/portage/make.conf`
 
   ```text
@@ -202,7 +207,7 @@
   ```shell
   # mkdir /etc/sudoers.d
   # echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
-  # useradd -m -G wheel <用户名>
+  # useradd -d /home/<用户目录名> -mG wheel <用户名>
   # passwd <用户名>
   ```
 
@@ -234,8 +239,9 @@
 
   ```shell
   $ getent group plugdev
-  # usermod -aG plugdev <username>
-  $ groups <username>
+  # usermod -aG plugdev <用户名>
+  $ groups <用户名>
+  $ id <用户名>
   ```
 
 * 启用显示管理器
@@ -259,6 +265,13 @@
 >
 > `# systemctl enable --now bluetooth`
 
+### 启动音频服务
+
+  ```shell
+  systemctl --user enable --now pulseaudio
+  systemctl --user status pulseaudio
+  ```
+
 ### 启动PipeWire服务
 
 * 必须启用，否则PipeWire相关功能不正常，例如OBS捕获屏幕黑屏等。
@@ -271,13 +284,6 @@
   * 这个依赖也是必须的
     > `# emerge -av xdg-desktop-portal-wlr`
 
-### 启动音频服务
-
-  ```shell
-  systemctl --user enable --now pulseaudio
-  systemctl --user status pulseaudio
-  ```
-
 * 查询
     > `$ LANG=C pactl info | grep "Server Name"`
 
@@ -287,8 +293,13 @@
   > `# emerge -au eselect-repository`
 * 启用软件源
   > `# eselect repository enable guru gentoo-zh`
-* 同步
-  > `# emerge --sync guru gentoo-zh`
+
+* 独立同步，提高成功率
+
+  ```shell
+  # emerge --sync guru
+  # emerge --sync gentoo-zh
+  ```
 
   * 查询软件源信息
     >`$ portageq repos_config /`
@@ -298,7 +309,6 @@
     ```shell
     # git clone --depth 1 https://github.com/gentoo-mirror/guru.git /var/db/repos/guru
     # git clone --depth 1 https://github.com/gentoo-mirror/gentoo-zh.git /var/db/repos/gentoo-zh
-    # eix-update
     ```
 
   * 手动同步
@@ -306,18 +316,20 @@
     ```shell
     # cd /var/db/repos/guru
     # git pull
-    # eix-update
     ```
+
+  * 更新数据库
+      > `# eix-update`
 
 ### 普通用户授权
 
   > `# nano /etc/polkit-1/rules.d/49-wheel.rules`
 
-  ```text
-  polkit.addAdminRule(function(action, subject) {
-    return ["unix-group:wheel"];
-  });
-  ```
+```text
+polkit.addAdminRule(function(action, subject) {
+  return ["unix-group:wheel"];
+});
+```
 
   > `# systemctl restart polkit.service`
 
@@ -326,8 +338,8 @@
 * 安装补充字体
 
   ```shell
-  # emerge -v ubuntu-font-family source-code-pro
-  # emerge -v --autounmask source-han-serif
+  # emerge -avg ubuntu-font-family source-code-pro
+  # emerge -avg --autounmask source-han-serif
   # dispatch-conf
   ```
 
@@ -349,7 +361,46 @@
   # dispatch-conf
   ```
 
-* 注销电脑，之后：设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
+* 执行重启`ibus`输入法框架命令，或者注销电脑
+  > `$ ibus restart`
+
+* 添加输入法
+  * 设置 - 键盘 - 输入源 - + - 汉语 - 中文(Rime)
+
+### GNOME组件补充
+
+  ```shell
+  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
+  ```
+
+### 常用软件
+
+* 提前配置USE
+
+  ```shell
+  # euse -p media-video/obs-studio -E pipewire v4l
+  # euse -p media-libs/opencv -E contrib
+  # euse -p app-editors/vscode -D wayland
+  ```
+
+* 批量安装
+
+  ```shell
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio kdenlive flameshot
+  ```
+
+### 扩展软件
+
+  ```shell
+  # emerge -avug --autounmask wps-office dingtalk tencent-qq wechat fastfetch xlsclients
+  ```
+
+### 远程桌面
+
+  ```shell
+  # euse -p net-misc/remmina -E vnc rdp
+  # emerge -avg remmina
+  ```
 
 ### 科学上网
 
@@ -365,35 +416,61 @@
   $ systemctl --user enable --now warp-taskbar.service
   ```
 
-### GNOME组件补充
+### 快照还原
+
+* 安装
 
   ```shell
-  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
+  # emerge -avg --autounmask timeshift btrfs-progs
+  # dispatch-conf
   ```
 
-### 常用软件
+* 加入用户组
 
   ```shell
-  # emerge -avug --autounmask celluloid audacious microsoft-edge vscode tencent-qq dingtalk obs-studio kdenlive flameshot wps-office gimp
+  # usermod -aG cron <用户名>
   ```
+
+* Timeshift只支持安装在`@`子卷中的系统，并且家目录挂载在`@home`子卷上。
 
 ### Overlay仓库
 
 * 海量野包下载：<https://gpo.zugaina.org/>
 
 * 创建本地仓库 `lucky`
+  > `$ eselect repository create lucky`
 
-  * 以 `todesk` 野包为例：<https://gpo.zugaina.org/net-misc/todesk>
+* 安装野包
+  * 以 `net-misc/synology-drive-client` 野包为例：<https://gpo.zugaina.org/net-misc/synology-drive-client>
 
   ```shell
-  # eselect repository create lucky
-  # mkdir -p /var/db/repos/lucky/net-misc/todesk
-  # cp ./todesk-4.7.2.0.ebuild /var/db/repos/lucky/net-misc/todesk/
-  # ebuild /var/db/repos/lucky/net-misc/todesk/todesk-4.7.2.0.ebuild manifest
+  # mkdir -p /var/db/repos/lucky/net-misc/synology-drive-client
+  # cp synology-drive-client-3.5.0.16084.ebuild /var/db/repos/lucky/net-misc/synology-drive-client/
+  # ebuild /var/db/repos/lucky/net-misc/synology-drive-client/synology-drive-client-3.5.0.16084.ebuild manifest
   # eix-update
-  # emerge -avg =net-misc/todesk-4.7.2.0 --autounmask
+  # emerge -avg =synology-drive-client-3.5.0.16084 --autounmask
   # dispatch-conf
   ```
+
+### HP打印机配置
+
+* 安装`cups`扩展
+
+  ```shell
+  # emerge -avg cups-filters
+  # systemctl restart cups
+  ```
+
+* 安装驱动
+
+  ```shell
+  # euse -p net-print/hplip -D qt5 snmp libnotify
+  # emerge -avg hplip-plugin
+  # hp-setup
+  ```
+
+  * 扫描
+    > `# emerge -avg simple-scan`
 
 ## Gentoo 技巧总结
 
@@ -404,6 +481,10 @@
 ### 紧凑模式搜索以`editor`结尾的包
   >
   > `$ eix -c editor$`
+
+### 紧凑模式搜索`ibus`且包含`engine`描述的包
+  >
+  > `$ eix -c -S engine ibus`
 
 ### 清理未完成的安装任务
   >
@@ -468,6 +549,15 @@
   >
   > `$ eix xdg-desktop- --installed`
 
+### 更新时 Github 下载包失败
+
+  部分ebuild需要从github.com下载包，但墙的原因，可能会下载失败，此时可通过命令获取需要下载包的链接地址。
+  >
+  > `# tail -f /var/log/emerge-fetch.log`
+
+  通过 <https://gh.api.99988866.xyz> Github下载加速，
+  将下载到的包拷贝到缓存目录 `/var/cache/distfiles`，删除与该文件相关的lock隐藏文件及下载缓存文件，再次运行更新命令即可。
+
 ### 查询服务
 
   ```shell
@@ -484,130 +574,37 @@
   >
   > `# emerge --deselect gnumeric`
 
-## Gentoo 平铺式桌面 [Sway](https://wiki.gentoo.org/wiki/Sway)
+### 修改用户主目录
 
-* 选择 `default/linux/amd64/23.0/desktop/systemd` 配置文件
-
-  ```shell
-  # eselect profile list
-  # eselect profile set <number>
-  # eselect profile show
-  ```
-
-### 网络
-
-  ```shell
-  # euse -p net-wireless/iwd standalone wired
-  # emerge -av iwd
-  # systemctl enable iwd
-  ```
-
-### [桌面](.config/sway/)
+* 注销桌面，进另一个`tty`登录`root`
   >
-  > `# emerge -av sway`
+  > `# usermod -d <新目录> -m <用户名>`
+  * `-m` 选项将原主目录中的文件全部移动到新主目录。
 
-### [顶栏](.config/waybar/)
+### 修改用户名
 
-  ```shell
-  # euse -p gui-apps/waybar -E network pulseaudio tray wifi
-  # emerge -av --autounmask waybar
-  # dispatch-conf
-  # emerge -av --autounmask =fontawesome-6.1.1
-  # dispatch-conf
-  ```
-
-### 启动器
+* 注销桌面，进另一个`tty`登录`root`
   >
-  > `# emerge -av --autounmask wofi`
+  > `# usermod -l <新用户名> <旧用户名>`
 
-### [终端](.config/foot/foot.ini)
+### 修改用户组名
   >
-  > `# emerge -av foot`
+  > `# groupmod -n <新组名> <旧组名>`
 
-### [通知](.config/mako/config)
-  >
-  > `# emerge -av gui-apps/mako`
+### Flameshot支持Wayland
 
-### 登录管理器
+* 方法一：GNOME添加快捷键命令
+  > `script --command "flameshot gui"`
+* 方法二：终端运行 `nohup flameshot &`
 
-  ```shell
-  # emerge -av --autounmask tuigreet
-  # systemctl enable greetd
-  ```
-
-* 修改配置
-    > `# nano /etc/greetd/config.toml`
-
-    ```text
-    command = "tuigreet --cmd sway"
-    ```
-
-* 如果登录界面被日志覆盖
-    > `# nano /etc/default/grub`
-
-    ```text
-    GRUB_CMDLINE_LINUX="quiet"
-    ```
-
-### [触控板](.config/sway/config)
-
-  ```text
-  input "1267:23:Elan_Touchpad" {
-    dwt enabled
-    tap enabled
-    natural_scroll enabled
-    middle_emulation enabled
-  }
-  ```
-
-### 环境变量
-  >
-  > `# nano /etc/environment`
-
-  ```text
-  XDG_CURRENT_DESKTOP=sway
-  XDG_SESSION_DESKTOP=sway
-  ```
-
-### 文件管理器
-
-  > `# emerge -av thunar thunar-archive-plugin thunar-volman tumbler xarchiver`
-
-* Thunar 右键终端
-
-  当提示错误`无法启动类别“TerminalEmulator”的首选应用程序。`时，可以修改[配置文件](.config/xfce4/helpers.rc)，添加内容：
-  > TerminalEmulator=foot
-
-### 其他安装
-
-* 文本编辑器
-  > `# emerge -av leafpad`
-* 视频播放器
-  > `# emerge -av mpv`
-* 音乐播放器
-  > `# emerge -av audacious`
-* 看图
-  > `# emerge -av imv`
-* 浏览器
-  > `# emerge -av microsoft-edge`
-* 开发
-  > `# emerge -av vscode`
-
-### 创建用户目录
-
-  ```shell
-  # emerge -av1 xdg-user-dirs
-  $ xdg-user-dirs-update --force
-  ```
-
-## Gentoo 定制内核
+## Gentoo 定制内核 <可忽略>
 
 ### 下载与选择源码
 
   ```shell
   # emerge -av gentoo-sources
   # eselect kernel list
-  # eselect kernel set <number>
+  # eselect kernel set <序号>
   # ls -l /usr/src
   ```
 
@@ -651,7 +648,7 @@
   >
   > .bin/kernel.sh
 
-## Gentoo 程序开发
+## Gentoo 程序开发 <可忽略>
 
 ### Rust 环境配置
 

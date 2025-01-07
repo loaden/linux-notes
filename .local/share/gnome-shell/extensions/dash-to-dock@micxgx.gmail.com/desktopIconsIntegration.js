@@ -55,17 +55,18 @@
  *
  *******************************************************************************/
 
-import GLib from 'gi://GLib';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+/* exported DesktopIconsUsableAreaClass */
+
+const { GLib } = imports.gi;
+const { main: Main } = imports.ui;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
 const IDENTIFIER_UUID = '130cbc66-235c-4bd6-8571-98d2d8bba5e2';
 
-export class DesktopIconsUsableAreaClass {
+var DesktopIconsUsableAreaClass = class {
     constructor() {
-        const Me = Extension.lookupByURL(import.meta.url);
-        this._UUID = Me.uuid;
         this._extensionManager = Main.extensionManager;
         this._timedMarginsID = 0;
         this._margins = {};
@@ -157,9 +158,7 @@ export class DesktopIconsUsableAreaClass {
             return;
 
         const usableArea = extension?.stateObj?.DesktopIconsUsableArea;
-        if (usableArea?.uuid === IDENTIFIER_UUID) {
-            usableArea.setMarginsForExtension(
-                this._UUID, this._margins);
-        }
+        if (usableArea?.uuid === IDENTIFIER_UUID)
+            usableArea.setMarginsForExtension(Me.uuid, this._margins);
     }
-}
+};

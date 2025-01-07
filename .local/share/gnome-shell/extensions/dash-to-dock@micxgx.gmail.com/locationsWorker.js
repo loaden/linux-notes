@@ -1,7 +1,9 @@
 #!/usr/bin/env gjs
 
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
+const { GLib, Gio } = imports.gi;
+
+const currentPath = GLib.path_get_dirname(new Error().fileName);
+imports.searchPath.unshift(currentPath);
 
 const GJS_SUPPORTS_FILE_IFACE_PROMISES = imports.system.version >= 17101;
 
@@ -88,4 +90,4 @@ function main(args) {
     return ret;
 }
 
-imports.system.exit(main(ARGV));
+main(ARGV);

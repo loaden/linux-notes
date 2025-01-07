@@ -14,23 +14,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
+/* exported StatusNotifierWatcher */
 
-import * as AppIndicator from './appIndicator.js';
-import * as IndicatorStatusIcon from './indicatorStatusIcon.js';
-import * as Interfaces from './interfaces.js';
-import * as PromiseUtils from './promiseUtils.js';
-import * as Util from './util.js';
-import * as DBusMenu from './dbusMenu.js';
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 
-import {DBusProxy} from './dbusProxy.js';
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+
+const AppIndicator = Extension.imports.appIndicator;
+const DBusMenu = Extension.imports.dbusMenu;
+const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon;
+const Interfaces = Extension.imports.interfaces;
+const PromiseUtils = Extension.imports.promiseUtils;
+const Util = Extension.imports.util;
 
 
 // TODO: replace with org.freedesktop and /org/freedesktop when approved
 const KDE_PREFIX = 'org.kde';
 
-export const WATCHER_BUS_NAME = `${KDE_PREFIX}.StatusNotifierWatcher`;
+var WATCHER_BUS_NAME = `${KDE_PREFIX}.StatusNotifierWatcher`;
 const WATCHER_OBJECT = '/StatusNotifierWatcher';
 
 const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
@@ -38,7 +40,8 @@ const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
 /*
  * The StatusNotifierWatcher class implements the StatusNotifierWatcher dbus object
  */
-export class StatusNotifierWatcher {
+var StatusNotifierWatcher = class AppIndicatorsStatusNotifierWatcher {
+
     constructor(watchDog) {
         this._watchDog = watchDog;
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(Interfaces.StatusNotifierWatcher, this);
@@ -128,7 +131,7 @@ export class StatusNotifierWatcher {
 
     async _ensureItemRegistered(service, busName, objPath) {
         const id = Util.indicatorId(service, busName, objPath);
-        const item = this._items.get(id);
+        let item = this._items.get(id);
 
         if (item) {
             // delete the old one and add the new indicator
@@ -155,7 +158,7 @@ export class StatusNotifierWatcher {
             const services = [...uniqueNames.get(name)];
 
             for await (const node of nodes) {
-                const {path} = node;
+                const { path } = node;
                 const ids = services.map(s => Util.indicatorId(s, name, path));
                 if (ids.every(id => !this._items.has(id))) {
                     const service = services.find(s =>
@@ -175,7 +178,7 @@ export class StatusNotifierWatcher {
         // it would be too easy if all application behaved the same
         // instead, ayatana patched gnome apps to send a path
         // while kde apps send a bus name
-        const [service] = params;
+        let [service] = params;
         let busName, objPath;
 
         if (service.charAt(0) === '/') { // looks like a path
@@ -192,7 +195,7 @@ export class StatusNotifierWatcher {
         }
 
         if (!busName || !objPath) {
-            const error = `Impossible to register an indicator for parameters '${
+            let error = `Impossible to register an indicator for parameters '${
                 service.toString()}'`;
             Util.Logger.warn(error);
 
@@ -213,7 +216,7 @@ export class StatusNotifierWatcher {
     }
 
     _onIndicatorDestroyed(indicator) {
-        const {uniqueId} = indicator;
+        const { uniqueId } = indicator;
         this._items.delete(uniqueId);
 
         try {
@@ -275,7 +278,7 @@ export class StatusNotifierWatcher {
 
         DBusMenu.DBusClient.destroy();
         AppIndicator.AppIndicatorProxy.destroy();
-        DBusProxy.destroy();
+        Util.DBusProxy.destroy();
         Util.destroyDefaultTheme();
 
         this._dbusImpl.run_dispose();
@@ -284,4 +287,4 @@ export class StatusNotifierWatcher {
         delete this._items;
         this._isDestroyed = true;
     }
-}
+};

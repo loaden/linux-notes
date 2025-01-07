@@ -14,25 +14,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
-import GObject from 'gi://GObject';
-import St from 'gi://St';
+/* exported BaseStatusIcon, IndicatorStatusIcon, IndicatorStatusTrayIcon,
+            addIconToPanel, getTrayIcons, getAppIndicatorIcons */
 
-import * as AppDisplay from 'resource:///org/gnome/shell/ui/appDisplay.js';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Panel from 'resource:///org/gnome/shell/ui/panel.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+const Clutter = imports.gi.Clutter;
+const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
+const St = imports.gi.St;
 
-import * as AppIndicator from './appIndicator.js';
-import * as PromiseUtils from './promiseUtils.js';
-import * as SettingsManager from './settingsManager.js';
-import * as Util from './util.js';
-import * as DBusMenu from './dbusMenu.js';
+const AppDisplay = imports.ui.appDisplay;
+const Main = imports.ui.main;
+const Panel = imports.ui.panel;
+const PanelMenu = imports.ui.panelMenu;
 
-const DEFAULT_ICON_SIZE = Panel.PANEL_ICON_SIZE || 16;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
 
-export function addIconToPanel(statusIcon) {
+const AppIndicator = Extension.imports.appIndicator;
+const DBusMenu = Extension.imports.dbusMenu;
+const Util = Extension.imports.util;
+const PromiseUtils = Extension.imports.promiseUtils;
+const SettingsManager = Extension.imports.settingsManager;
+
+function addIconToPanel(statusIcon) {
     if (!(statusIcon instanceof BaseStatusIcon))
         throw TypeError(`Unexpected icon type: ${statusIcon}`);
 
@@ -54,18 +58,18 @@ export function addIconToPanel(statusIcon) {
         addIconToPanel(statusIcon));
 }
 
-export function getTrayIcons() {
+function getTrayIcons() {
     return Object.values(Main.panel.statusArea).filter(
         i => i instanceof IndicatorStatusTrayIcon);
 }
 
-export function getAppIndicatorIcons() {
+function getAppIndicatorIcons() {
     return Object.values(Main.panel.statusArea).filter(
         i => i instanceof IndicatorStatusIcon);
 }
 
-export const BaseStatusIcon = GObject.registerClass(
-class IndicatorBaseStatusIcon extends PanelMenu.Button {
+var BaseStatusIcon = GObject.registerClass(
+class AppIndicatorsIndicatorBaseStatusIcon extends PanelMenu.Button {
     _init(menuAlignment, nameText, iconActor, dontCreateMenu) {
         super._init(menuAlignment, nameText, dontCreateMenu);
 
@@ -76,7 +80,7 @@ class IndicatorBaseStatusIcon extends PanelMenu.Button {
         if (!super._onDestroy)
             this.connect('destroy', () => this._onDestroy());
 
-        this._box = new St.BoxLayout({style_class: 'panel-status-indicators-box'});
+        this._box = new St.BoxLayout({ style_class: 'panel-status-indicators-box' });
         this.add_child(this._box);
 
         this._setIconActor(iconActor);
@@ -143,8 +147,10 @@ class IndicatorBaseStatusIcon extends PanelMenu.Button {
         const userValue = settings.get_user_value('icon-opacity');
         if (userValue)
             this.opacity = userValue.unpack();
-        else
+        else if (Util.versionCheck(['40']))
             this.opacity = 255;
+        else
+            this.opacity = settings.get_int('icon-opacity');
     }
 
     _updateEffects() {
@@ -220,11 +226,11 @@ class IndicatorBaseStatusIcon extends PanelMenu.Button {
 /*
  * IndicatorStatusIcon implements an icon in the system status area
  */
-export const IndicatorStatusIcon = GObject.registerClass(
-class IndicatorStatusIcon extends BaseStatusIcon {
+var IndicatorStatusIcon = GObject.registerClass(
+class AppIndicatorsIndicatorStatusIcon extends BaseStatusIcon {
     _init(indicator) {
         super._init(0.5, indicator.accessibleName,
-            new AppIndicator.IconActor(indicator, DEFAULT_ICON_SIZE));
+            new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE));
         this._indicator = indicator;
 
         this._lastClickTime = -1;
@@ -269,22 +275,23 @@ class IndicatorStatusIcon extends BaseStatusIcon {
     }
 
     _updateLabel() {
-        const {label} = this._indicator;
+        var label = this._indicator.label;
         if (label) {
             if (!this._label || !this._labelBin) {
                 this._labelBin = new St.Bin({
-                    yAlign: Clutter.ActorAlign.CENTER,
+                    y_align: Util.versionCheck(['3.34'])
+                        ? St.Align.MIDDLE : Clutter.ActorAlign.CENTER,
                 });
                 this._label = new St.Label();
-                Util.addActor(this._labelBin, this._label);
-                Util.addActor(this._box, this._labelBin);
+                this._labelBin.add_actor(this._label);
+                this._box.add_actor(this._labelBin);
             }
             this._label.set_text(label);
             if (!this._box.contains(this._labelBin))
-                Util.addActor(this._box, this._labelBin); // FIXME: why is it suddenly necessary?
+                this._box.add_actor(this._labelBin); // FIXME: why is it suddenly necessary?
         } else if (this._label) {
             this._labelBin.destroy_all_children();
-            Util.removeActor(this._box, this._labelBin);
+            this._box.remove_actor(this._labelBin);
             this._labelBin.destroy();
             delete this._labelBin;
             delete this._label;
@@ -332,10 +339,9 @@ class IndicatorStatusIcon extends BaseStatusIcon {
         this._updateMenu();
     }
 
-    _updateClickCount(event) {
-        const [x, y] = event.get_coords();
-        const time = event.get_time();
-        const {doubleClickDistance, doubleClickTime} =
+    _updateClickCount(buttonEvent) {
+        const { x, y, time } = buttonEvent;
+        const { doubleClickDistance, doubleClickTime } =
             Clutter.Settings.get_default();
 
         if (time > (this._lastClickTime + doubleClickTime) ||
@@ -352,15 +358,17 @@ class IndicatorStatusIcon extends BaseStatusIcon {
         return this._clickCount;
     }
 
-    _maybeHandleDoubleClick(event) {
+    _maybeHandleDoubleClick(buttonEvent) {
         if (this._indicator.supportsActivation === false)
             return Clutter.EVENT_PROPAGATE;
 
-        if (event.get_button() !== Clutter.BUTTON_PRIMARY)
+        if (buttonEvent.button !== Clutter.BUTTON_PRIMARY)
             return Clutter.EVENT_PROPAGATE;
 
-        if (this._updateClickCount(event) === 2) {
-            this._indicator.open(...event.get_coords(), event.get_time());
+        if (buttonEvent.click_count === 2 ||
+            (buttonEvent.click_count === undefined &&
+             this._updateClickCount(buttonEvent) === 2)) {
+            this._indicator.open(buttonEvent.x, buttonEvent.y, buttonEvent.time);
             return Clutter.EVENT_STOP;
         }
 
@@ -368,7 +376,7 @@ class IndicatorStatusIcon extends BaseStatusIcon {
     }
 
     async _waitForDoubleClick() {
-        const {doubleClickTime} = Clutter.Settings.get_default();
+        const { doubleClickTime } = Clutter.Settings.get_default();
         this._waitDoubleClickPromise = new PromiseUtils.TimeoutPromise(
             doubleClickTime);
 
@@ -390,28 +398,28 @@ class IndicatorStatusIcon extends BaseStatusIcon {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    vfunc_button_press_event(event) {
+    vfunc_button_press_event(buttonEvent) {
         if (this._waitDoubleClickPromise)
             this._waitDoubleClickPromise.cancel();
 
         // if middle mouse button clicked send SecondaryActivate dbus event and do not show appindicator menu
-        if (event.get_button() === Clutter.BUTTON_MIDDLE) {
+        if (buttonEvent.button === Clutter.BUTTON_MIDDLE) {
             if (Main.panel.menuManager.activeMenu)
                 Main.panel.menuManager._closeMenu(true, Main.panel.menuManager.activeMenu);
-            this._indicator.secondaryActivate(event.get_time(), ...event.get_coords());
+            this._indicator.secondaryActivate(buttonEvent.time, buttonEvent.x, buttonEvent.y);
             return Clutter.EVENT_STOP;
         }
 
-        if (event.get_button() === Clutter.BUTTON_SECONDARY) {
+        if (buttonEvent.button === Clutter.BUTTON_SECONDARY) {
             this.menu.toggle();
             return Clutter.EVENT_PROPAGATE;
         }
 
-        const doubleClickHandled = this._maybeHandleDoubleClick(event);
+        const doubleClickHandled = this._maybeHandleDoubleClick(buttonEvent);
         if (doubleClickHandled === Clutter.EVENT_PROPAGATE &&
-            event.get_button() === Clutter.BUTTON_PRIMARY &&
+            buttonEvent.button === Clutter.BUTTON_PRIMARY &&
             this.menu.numMenuItems) {
-            if (this._indicator.supportsActivation !== false)
+            if (this._indicator.supportsActivation)
                 this._waitForDoubleClick().catch(logError);
             else
                 this.menu.toggle();
@@ -420,13 +428,21 @@ class IndicatorStatusIcon extends BaseStatusIcon {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    vfunc_scroll_event(event) {
+    vfunc_button_release_event(buttonEvent) {
+        if (!this._indicator.supportsActivation)
+            return this._maybeHandleDoubleClick(buttonEvent);
+
+        return Clutter.EVENT_PROPAGATE;
+    }
+
+    vfunc_scroll_event(scrollEvent) {
         // Since Clutter 1.10, clutter will always send a smooth scrolling event
         // with explicit deltas, no matter what input device is used
         // In fact, for every scroll there will be a smooth and non-smooth scroll
         // event, and we can choose which one we interpret.
-        if (event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
-            const [dx, dy] = event.get_scroll_delta();
+        if (scrollEvent.direction === Clutter.ScrollDirection.SMOOTH) {
+            const event = Clutter.get_current_event();
+            let [dx, dy] = event.get_scroll_delta();
 
             this._indicator.scroll(dx, dy);
             return Clutter.EVENT_STOP;
@@ -436,10 +452,10 @@ class IndicatorStatusIcon extends BaseStatusIcon {
     }
 });
 
-export const IndicatorStatusTrayIcon = GObject.registerClass(
-class IndicatorTrayIcon extends BaseStatusIcon {
+var IndicatorStatusTrayIcon = GObject.registerClass(
+class AppIndicatorsIndicatorTrayIcon extends BaseStatusIcon {
     _init(icon) {
-        super._init(0.5, icon.wm_class, icon, {dontCreateMenu: true});
+        super._init(0.5, icon.wm_class, icon, { dontCreateMenu: true });
         Util.Logger.debug(`Adding legacy tray icon ${this.uniqueId}`);
         this._box.add_style_class_name('appindicator-trayicons-box');
         this.add_style_class_name('appindicator-icon');
@@ -505,26 +521,26 @@ class IndicatorTrayIcon extends BaseStatusIcon {
     _getSimulatedButtonEvent(touchEvent) {
         const event = Clutter.Event.new(Clutter.EventType.BUTTON_RELEASE);
         event.set_button(1);
-        event.set_time(touchEvent.get_time());
-        event.set_flags(touchEvent.get_flags());
-        event.set_stage(global.stage);
-        event.set_source(touchEvent.get_source());
-        event.set_coords(...touchEvent.get_coords());
-        event.set_state(touchEvent.get_state());
+        event.set_time(touchEvent.time);
+        event.set_flags(touchEvent.flags);
+        event.set_stage(touchEvent.stage);
+        event.set_source(touchEvent.source);
+        event.set_coords(touchEvent.x, touchEvent.y);
+        event.set_state(touchEvent.modifier_state);
         return event;
     }
 
-    vfunc_touch_event(event) {
+    vfunc_touch_event(touchEvent) {
         // Under X11 we rely on emulated pointer events
         if (!imports.gi.Meta.is_wayland_compositor())
             return Clutter.EVENT_PROPAGATE;
 
-        const slot = event.get_event_sequence().get_slot();
+        const slot = touchEvent.sequence.get_slot();
 
         if (!this._touchPressSlot &&
-            event.get_type() === Clutter.EventType.TOUCH_BEGIN) {
+            touchEvent.type === Clutter.EventType.TOUCH_BEGIN) {
             this.add_style_pseudo_class('active');
-            this._touchButtonEvent = this._getSimulatedButtonEvent(event);
+            this._touchButtonEvent = this._getSimulatedButtonEvent(touchEvent);
             this._touchPressSlot = slot;
             this._touchDelayPromise = new PromiseUtils.TimeoutPromise(
                 AppDisplay.MENU_POPUP_TIMEOUT);
@@ -535,7 +551,7 @@ class IndicatorTrayIcon extends BaseStatusIcon {
                 this._icon.click(this._touchButtonEvent);
                 this.remove_style_pseudo_class('active');
             });
-        } else if (event.get_type() === Clutter.EventType.TOUCH_END &&
+        } else if (touchEvent.type === Clutter.EventType.TOUCH_END &&
                    this._touchPressSlot === slot) {
             delete this._touchPressSlot;
             delete this._touchButtonEvent;
@@ -544,18 +560,18 @@ class IndicatorTrayIcon extends BaseStatusIcon {
                 delete this._touchDelayPromise;
             }
 
-            this._icon.click(this._getSimulatedButtonEvent(event));
+            this._icon.click(this._getSimulatedButtonEvent(touchEvent));
             this.remove_style_pseudo_class('active');
-        } else if (event.get_type() === Clutter.EventType.TOUCH_UPDATE &&
+        } else if (touchEvent.type === Clutter.EventType.TOUCH_UPDATE &&
                    this._touchPressSlot === slot) {
             this.add_style_pseudo_class('active');
-            this._touchButtonEvent = this._getSimulatedButtonEvent(event);
+            this._touchButtonEvent = this._getSimulatedButtonEvent(touchEvent);
         }
 
         return Clutter.EVENT_PROPAGATE;
     }
 
-    vfunc_leave_event(event) {
+    vfunc_leave_event(crossingEvent) {
         this.remove_style_pseudo_class('active');
 
         if (this._touchDelayPromise) {
@@ -563,16 +579,16 @@ class IndicatorTrayIcon extends BaseStatusIcon {
             delete this._touchDelayPromise;
         }
 
-        return super.vfunc_leave_event(event);
+        return super.vfunc_leave_event(crossingEvent);
     }
 
     _updateIconSize() {
         const settings = SettingsManager.getDefaultGSettings();
-        const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
+        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
         let iconSize = settings.get_int('icon-size');
 
         if (iconSize <= 0)
-            iconSize = DEFAULT_ICON_SIZE;
+            iconSize = Panel.PANEL_ICON_SIZE;
 
         this.height = -1;
         this._icon.set({

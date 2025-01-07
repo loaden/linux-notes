@@ -14,18 +14,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import Shell from 'gi://Shell';
+/* exported TrayIconsManager */
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+const Shell = imports.gi.Shell;
+const Main = imports.ui.main;
+const Signals = imports.signals;
 
-import * as IndicatorStatusIcon from './indicatorStatusIcon.js';
-import * as Util from './util.js';
-import * as SettingsManager from './settingsManager.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const Extension = ExtensionUtils.getCurrentExtension();
+const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon;
+const Util = Extension.imports.util;
+const SettingsManager = Extension.imports.settingsManager;
 
 let trayIconsManager;
 
-export class TrayIconsManager extends Signals.EventEmitter {
+var TrayIconsManager = class TrayIconsManager {
     static initialize() {
         if (!trayIconsManager)
             trayIconsManager = new TrayIconsManager();
@@ -37,8 +41,6 @@ export class TrayIconsManager extends Signals.EventEmitter {
     }
 
     constructor() {
-        super();
-
         if (trayIconsManager)
             throw new Error('TrayIconsManager is already constructed');
 
@@ -101,4 +103,5 @@ export class TrayIconsManager extends Signals.EventEmitter {
         this._disable();
         trayIconsManager = null;
     }
-}
+};
+Signals.addSignalMethods(TrayIconsManager.prototype);
