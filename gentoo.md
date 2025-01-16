@@ -79,6 +79,8 @@
   USE="vpx screencast -gnome-online-accounts"
   ```
 
+  * 全局USE的修改，是为了去除`webkit-gtk`依赖
+
   * 获取配置信息
     > `emerge --info`
 
