@@ -527,6 +527,11 @@ polkit.addAdminRule(function(action, subject) {
   $ e-file libunwind.a
   ```
 
+### 清除过时包
+  >
+  > `# emerge --ask --depclean` </br>
+  > `# emerge -ac`
+
 ### 清理源文件
   >
   > `# eclean-dist --deep`
