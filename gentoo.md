@@ -597,6 +597,16 @@ polkit.addAdminRule(function(action, subject) {
   > `script --command "flameshot gui"`
 * 方法二：终端运行 `nohup flameshot &`
 
+### 编译过程链接错误
+
+  一般是二进制的包与当前编译的包使用了不同的编译器，错误信息如下:
+
+  ```shell
+  libQt5Core.so: undefined reference to `__cxa_call_terminate@CXXABI_1.3.15'
+  ```
+
+  尝试切换到高版本的GCC编译器: `eselect gcc`
+
 ## Gentoo 定制内核 <可忽略>
 
 ### 下载与选择源码
