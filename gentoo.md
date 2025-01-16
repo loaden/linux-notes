@@ -135,8 +135,9 @@
   ```
 
 * [二进制包配置](etc/portage/binrepos.conf/gentoobinhost.conf)
-  > `$ ld.so --help`
+  > 先查询CPU支持情况: `$ ld.so --help`
 
+  > 然后再修改：
   `# nano /etc/portage/binrepos.conf/gentoobinhost.conf`
 
   ```text
@@ -383,18 +384,19 @@ polkit.addAdminRule(function(action, subject) {
   # euse -p media-video/obs-studio -E pipewire v4l
   # euse -p media-libs/opencv -E contrib
   # euse -p app-editors/vscode -D wayland
+  # euse -p media-video/ffmpeg -E x265
   ```
 
 * 批量安装
 
   ```shell
-  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio kdenlive flameshot
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio ffmpeg kdenlive flameshot
   ```
 
 ### 扩展软件
 
   ```shell
-  # emerge -avug --autounmask wps-office dingtalk tencent-qq wechat fastfetch xlsclients
+  # emerge -avug --autounmask wps-office dingtalk tencent-qq wechat neofetch xlsclients
   ```
 
 ### 远程桌面
@@ -488,48 +490,42 @@ polkit.addAdminRule(function(action, subject) {
   >
   > `$ eix -c -S engine ibus`
 
-### 清理未完成的安装任务
-  >
-  > `# emaint --fix cleanresume`
-
 ### 查询文件隶属哪个已安装包
   >
-  > `# equery belongs eix`
+  > `$ equery belongs eix` </br>
+  > `$ equery b eix`
+
+### 查询 *USE* 被哪些包所用
+  >
+  > `$ equery hasuse gnome-online-accounts` </br>
+  > `$ equery h gnome-online-accounts`
+
+### 查询已安装包文件列表
+  >
+  > `$ equery files --tree eix` </br>
+  > `$ equery f --tree eix`
+
+### 查询 *EBUILD* 路径
+  >
+  > `$ equery which eix` </br>
+  > `$ equery w eix`
+
+### 检查系统已经安装的包版本
+  >
+  > `$ equery list '*'` </br>
+  > `$ equery l '*'`
+
+### 检查当前系统的glibc版本
+  >
+  > `$ equery list glibc` </br>
+  > `$ equery l glibc`
 
 ### 通过文件查找未安装包
 
   ```shell
   # emerge -av pfl
-  # e-file libunwind.a
+  $ e-file libunwind.a
   ```
-
-### 查询 *USE* 被哪些包所用
-  >
-  > `# equery hasuse gnome-online-accounts`
-
-### 查询已安装包文件列表
-  >
-  > `# equery files --tree eix`
-
-### 查询 *EBUILD* 路径
-  >
-  > `# equery which eix`
-
-### 恢复编译
-  >
-  > `# emerge --resume`
-
-### 检查”孤儿”包
-  >
-  > `$ eix-test-obsolete`
-
-### 检查系统已经安装的包版本
-  >
-  > `$ equery list '*'`
-
-### 检查当前系统的glibc版本
-  >
-  > `# equery list glibc`
 
 ### 清理源文件
   >
@@ -550,6 +546,18 @@ polkit.addAdminRule(function(action, subject) {
 ### 查询已安装包
   >
   > `$ eix xdg-desktop- --installed`
+
+### 恢复编译
+  >
+  > `# emerge --resume`
+
+### 清理未完成的安装任务
+  >
+  > `# emaint --fix cleanresume`
+
+### 检查”孤儿”包
+  >
+  > `$ eix-test-obsolete`
 
 ### 更新时 Github 下载包失败
 
@@ -599,7 +607,7 @@ polkit.addAdminRule(function(action, subject) {
   > `script --command "flameshot gui"`
 * 方法二：终端运行 `nohup flameshot &`
 
-### 编译过程链接错误
+### 修复编译链接错误
 
   一般是二进制的包与当前编译的包使用了不同的编译器，错误信息如下:
 
