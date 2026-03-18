@@ -1,28 +1,19 @@
-const St = imports.gi.St;
-const Gio = imports.gi.Gio;
-const Gdk = imports.gi.Gdk;
-const Gtk = imports.gi.Gtk;
-const Clutter = imports.gi.Clutter;
-const GObject = imports.gi.GObject;
-const Gettext = imports.gettext.domain('lockkeys');
-const _ = Gettext.gettext;
+import St from 'gi://St';
+import Gio from 'gi://Gio';
+import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
 
-const Panel = imports.ui.panel;
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const MessageTray = imports.ui.messageTray;
-const Config = imports.misc.config;
+import * as Panel from 'resource:///org/gnome/shell/ui/panel.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
-const POST_40 = parseFloat(Config.PACKAGE_VERSION) >= 40;
-const POST_3_36 = parseFloat(Config.PACKAGE_VERSION) >= 3.36;
-const Keymap = POST_3_36 ? Clutter.get_default_backend().get_default_seat().get_keymap():
-			               Clutter.get_default_backend().get_keymap();
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils;
-
+const POST_46 = parseFloat(Config.PACKAGE_VERSION) >= 46;
+const POST_49 = parseFloat(Config.PACKAGE_VERSION) >= 49;
 
 const STYLE = 'style';
 const STYLE_NONE = 'none';
@@ -32,43 +23,50 @@ const STYLE_BOTH = 'both';
 const STYLE_SHOWHIDE = 'show-hide';
 const STYLE_SHOWHIDE_CAPSLOCK = 'show-hide-capslock';
 const NOTIFICATIONS = 'notification-preferences';
-const NOTIFICATIONS_OFF = 'off';
+//const NOTIFICATIONS_OFF = 'off';
 const NOTIFICATIONS_ON = 'on';
-const NOTIFICATIONS_OSD = 'osd';
+//const NOTIFICATIONS_OSD = 'osd';
 
-let indicator;
+const NOTIFICATION_OFF = "off";
+const NOTIFICATION_COMPACT = "compact";
+const NOTIFICATION_OSD = "osd";
+const VISIBILITY_NEVER = "never";
+const VISIBILITY_WHEN_ACTIVE = "when-active";
+const VISIBILITY_ALWAYS = "always";
 
-function init() {
-	Utils.initTranslations("lockkeys");
+export default class LockKeysExtension extends Extension {
+    enable() {
+        const config = new Configuration(this.getSettings());
+        const icons = new ExtensionIcons(this.dir);
+        this._indicator = new LockKeysIndicator(config, icons);
+        Main.panel.addToStatusArea('lockkeys', this._indicator, 2);
+        this._indicator.setActive(true);
+    }
+
+    disable() {
+        this._indicator.setActive(false);
+        this._indicator.destroy();
+        this._indicator = null;
+    }
 }
 
-function enable() {
-	indicator = new LockKeysIndicator();
-	Main.panel.addToStatusArea('lockkeys', indicator, 2);
-	indicator.setActive(true);
-}
-
-function disable() {
-	indicator.setActive(false);
-	indicator.destroy();
-}
-
-const LockKeysIndicator = GObject.registerClass(
-class LockKeysIndicator extends PanelMenu.Button {
-    _init() {
+const LockKeysIndicator = GObject.registerClass({
+}, class LockKeysIndicator extends PanelMenu.Button {
+    _init(config, icons) {
         super._init(0.0, " LockKeysIndicator");
+        this.config = config;
+        this.icons = icons;
+        this.keyMap = Clutter.get_default_backend().get_default_seat().get_keymap();
 
-        this.iconTheme = this.createIconThemeCompat();
         this.numIcon = new St.Icon({
             style_class: 'system-status-icon lockkeys-status-icon'
         });
         this.capsIcon = new St.Icon({
             style_class: 'system-status-icon lockkeys-status-icon'
         });
-        if (POST_40) {
-            this.numIcon.set_style('padding-right: 0px; padding-left: 0px;');
-            this.capsIcon.set_style('padding-right: 0px; padding-left: 0px;');
-        }
+
+        this.numIcon.set_style('padding-right: 0px; padding-left: 0px;');
+        this.capsIcon.set_style('padding-right: 0px; padding-left: 0px;');
 
         let layoutManager = new St.BoxLayout({
             vertical: false,
@@ -76,103 +74,68 @@ class LockKeysIndicator extends PanelMenu.Button {
         });
         layoutManager.add_child(this.numIcon);
         layoutManager.add_child(this.capsIcon);
-        this.addChildCompat(layoutManager);
+        this.add_child(layoutManager);
 
         this.numMenuItem = new PopupMenu.PopupSwitchMenuItem(_("Num Lock"), false, { reactive: false });
+        this.numMenuItem._switch.set_opacity(122);
         this.menu.addMenuItem(this.numMenuItem);
 
         this.capsMenuItem = new PopupMenu.PopupSwitchMenuItem(_("Caps Lock"), false, { reactive: false });
+        this.capsMenuItem._switch.set_opacity(122);
         this.menu.addMenuItem(this.capsMenuItem);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.settingsMenuItem = new PopupMenu.PopupMenuItem(_("Settings"));
-        this.settingsMenuItem.connect('activate', this.handleSettingsMenuItem.bind(this));
         this.menu.addMenuItem(this.settingsMenuItem);
+        this.settingsMenuItem.connect('activate', function(menu_item) {
+            Main.extensionManager.openExtensionPrefs('lockkeys@vaina.lt', '', {});
+        });
 
-        this.config = new Configuration();
-        this.indicatorStyle = new HighlightIndicator(this);
+        this.indicatorStyle = new HighlightIndicatorStyle(this);
+		this.updateState();
     }
-
-    createIconThemeCompat() {
-        if (St.IconTheme) {
-            return new St.IconTheme();
-        }
-
-        return new Gtk.IconTheme();
-    }
-
-	getCustIcon(icon_name) {
-		if (this.iconTheme.has_icon(icon_name)) {
-            return Gio.ThemedIcon.new_with_default_fallbacks(icon_name);
-        }
-		let icon_path = Me.dir.get_child('icons').get_child(icon_name + ".svg").get_path();
-		return Gio.FileIcon.new(Gio.File.new_for_path(icon_path));
-	}
-
-	addChildCompat(child) {
-		this.add_child(child);
-	}
 
 	setActive(enabled) {
 		if (enabled) {
-			this._keyboardStateChangedId = Keymap.connect('state-changed', this.handleStateChange.bind(this));
-			this._settingsChangedId = this.config.settings.connect('changed::' + STYLE, this.handleSettingsChange.bind(this));
-			if (St.IconTheme) {
-			   this._iconThemeChangedId = this.iconTheme.connect('changed', this.handleSettingsChange.bind(this));
-			} else {
-			   this._iconThemeChangedId = St.Settings.get().connect('notify::gtk-icon-theme', this.handleSettingsChange.bind(this));
-			}
-			this.handleSettingsChange();
+			this._keyboardStateChangedId = this.keyMap.connect('state-changed', this.handleStateChange.bind(this));
+           	this._settingsChangedId = this.config.settings.connect('changed', this.handleSettingsChange.bind(this));
+           	this._iconThemeChangedId = this.icons.iconTheme.connect('changed', this.handleSettingsChange.bind(this));
+           	this.handleSettingsChange();
 		} else {
-			Keymap.disconnect(this._keyboardStateChangedId);
+			this.keyMap.disconnect(this._keyboardStateChangedId);
 			this._keyboardStateChangedId = 0;
 			this.config.settings.disconnect(this._settingsChangedId);
 			this._settingsChangedId = 0;
-			if (St.IconTheme) {
-			   this.iconTheme.disconnect(this._iconThemeChangedId);
-			} else {
-			   St.Settings.get().disconnect(this._iconThemeChangedId);
-			}
+            this.icons.iconTheme.disconnect(this._iconThemeChangedId);
 			this._iconThemeChangedId = 0;
 		}
 	}
 
-	handleSettingsMenuItem(actor, event) {
-		if (POST_3_36)
-			imports.misc.util.spawn(['gnome-extensions', 'prefs', 'lockkeys@vaina.lt']);
-		else
-			imports.misc.util.spawn(['gnome-shell-extension-prefs', 'lockkeys@vaina.lt']);
-	}
-
 	handleSettingsChange(actor, event) {
-		this.handleIconThemeChangeCompat();
-		if (this.config.isVisibilityStyle())
-			this.indicatorStyle = new VisibilityIndicator(this);
-		else if (this.config.isVisibilityStyleCapslock())
-			this.indicatorStyle = new VisibilityIndicatorCapslock(this);
-		else
-			this.indicatorStyle = new HighlightIndicator(this);
-		this.updateState();
-	}
+        const numSetting = this.config.getNumlockIndicator();
+        const capsSetting = this.config.getCapslockIndicator();
 
-	handleIconThemeChangeCompat() {
-		if (St.IconTheme) {
-			 return;
-		}
-		this.iconTheme.set_custom_theme(St.Settings.get().gtk_icon_theme);
+        if (numSetting === VISIBILITY_NEVER && capsSetting === VISIBILITY_WHEN_ACTIVE) {
+            this.indicatorStyle = new VisibilityIndicatorCapslockStyle(this);
+        } else if (numSetting === VISIBILITY_WHEN_ACTIVE && capsSetting === VISIBILITY_WHEN_ACTIVE) {
+            this.indicatorStyle = new VisibilityIndicatorStyle(this);
+        } else {
+            this.indicatorStyle = new HighlightIndicatorStyle(this);
+        }
+        this.updateState();
 	}
 
 	handleStateChange(actor, event) {
-		if (this.numlock_state != this.getNumlockState() && this.config.isNotifyNumLock()) {
+		if (this.numlock_state != this.getNumlockState() && this.config.getNumlockNotification() !== NOTIFICATION_OFF) {
 		    let notification_text = _("Num Lock") + ' ' + this.getStateText(this.getNumlockState());
             let icon_name = this.getNumlockState()? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
-            this.showNotification(notification_text, icon_name);
+            this.showNumlockNotification(notification_text, icon_name);
 		}
 
-		if (this.capslock_state != this.getCapslockState() && this.config.isNotifyCapsLock()) {
+		if (this.capslock_state != this.getCapslockState() && this.config.getCapslockNotification() !== NOTIFICATION_OFF) {
 			let notification_text = _("Caps Lock") + ' ' + this.getStateText(this.getCapslockState());
 			let icon_name = this.getCapslockState()? "capslock-enabled-symbolic" : "capslock-disabled-symbolic";
-            this.showNotification(notification_text, icon_name);
+            this.showCapslockNotification(notification_text, icon_name);
 		}
 
 		this.updateState();
@@ -187,16 +150,74 @@ class LockKeysIndicator extends PanelMenu.Button {
 		this.capsMenuItem.setToggleState(this.capslock_state);
 	}
 
-	showNotification(notification_text, icon_name) {
-		if (this.config.isShowOsd()) {
-			Main.osdWindowManager.show(-1, this.getCustIcon(icon_name), notification_text);
-		} else {
-			this.showSimpleNotification(notification_text, icon_name);
+	showNumlockNotification(notification_text, icon_name) {
+		if (this.config.getNumlockNotification() === NOTIFICATION_OSD) {
+			if (POST_49) {
+				Main.osdWindowManager.showAll(this.icons.getCustomIcon(icon_name), notification_text);
+			} else {
+				Main.osdWindowManager.show(-1, this.icons.getCustomIcon(icon_name), notification_text);
+			}
+		} else if (this.config.getNumlockNotification() === NOTIFICATION_COMPACT) {
+			if (POST_46) {
+				this.showSimpleNotification(notification_text, icon_name, '_numlockSource');
+			} else {
+				this.showSimpleNotification45(notification_text, icon_name, '_numlockSource');
+			}
+		}
+	}
+
+	showCapslockNotification(notification_text, icon_name) {
+		if (this.config.getCapslockNotification() === NOTIFICATION_OSD) {
+			if (POST_49) {
+				Main.osdWindowManager.showAll(this.icons.getCustomIcon(icon_name), notification_text);
+			} else {
+				Main.osdWindowManager.show(-1, this.icons.getCustomIcon(icon_name), notification_text);
+			}
+		} else if (this.config.getCapslockNotification() === NOTIFICATION_COMPACT) {
+			if (POST_46) {
+				this.showSimpleNotification(notification_text, icon_name, '_capslockSource');
+			} else {
+				this.showSimpleNotification45(notification_text, icon_name, '_capslockSource');
+			}
 		}
 	}
 
 	showSimpleNotification(notification_text, icon_name) {
-	    this.prepareSource(icon_name);
+        this.prepareSource(icon_name);
+
+        let notification = null;
+        if (this._source.notifications.length == 0) {
+            notification = new MessageTray.Notification({
+                source: this._source,
+                title: notification_text
+            });
+            notification['is-transient'] = true;
+            notification['resident'] = false;
+        } else {
+            notification = this._source.notifications[0];
+            notification.title = notification_text
+        }
+
+        this._source.addNotification(notification);
+    }
+
+    prepareSource(icon_name) {
+        if (this._source == null) {
+            this._source = new MessageTray.Source({
+                title: "Lock Keys"
+            });
+
+            const parent = this;
+            this._source.connect('destroy', function() {
+                parent._source = null;
+            });
+            Main.messageTray.add(this._source);
+        }
+        this._source.icon = this.icons.getCustomIcon(icon_name);
+    }
+
+	showSimpleNotification45(notification_text, icon_name) {
+	    this.prepareSource45(icon_name);
 
         let notification = null;
         if (this._source.notifications.length == 0) {
@@ -208,20 +229,17 @@ class LockKeysIndicator extends PanelMenu.Button {
             notification.update(notification_text, null, { clear: true });
         }
 
-		if (POST_3_36)
-			this._source.showNotification(notification);
-		else
-			this._source.notify(notification);
+	    this._source.showNotification(notification);
 	}
 
-	prepareSource(icon_name) {
+	prepareSource45(icon_name) {
 		if (this._source == null) {
-			this._source = new MessageTray.Source("LockKeysIndicator", icon_name);
+			this._source = new MessageTray.Source("Lock Keys", icon_name);
 
 			let parent = this;
 			this._source.createIcon = function(size) {
 				return new St.Icon({
-					gicon: parent.getCustIcon(parent._source.iconName),
+					gicon: parent.icons.getCustomIcon(parent._source.iconName),
                     icon_size: size
                 });
 			}
@@ -239,102 +257,139 @@ class LockKeysIndicator extends PanelMenu.Button {
 	}
 
 	getNumlockState() {
-		return Keymap.get_num_lock_state();
+        return this.keyMap.get_num_lock_state();
 	}
 
 	getCapslockState() {
-		return Keymap.get_caps_lock_state();
+        return this.keyMap.get_caps_lock_state();
 	}
 });
 
-const HighlightIndicator = GObject.registerClass(
-class HighlightIndicator extends GObject.Object{
-	_init(panelButton) {
-		this.panelButton = panelButton;
-		this.config = panelButton.config;
-		this.numIcon = panelButton.numIcon;
-		this.capsIcon = panelButton.capsIcon;
-
-		if (this.config.isHighlightNumLock())
-			this.numIcon.show();
-		else
-			this.numIcon.hide();
-
-		if (this.config.isHighlightCapsLock())
-			this.capsIcon.show();
-		else
-			this.capsIcon.hide();
-
-		this.panelButton.visible = this.config.isHighlightNumLock() || this.config.isHighlightCapsLock();
+const ExtensionIcons = GObject.registerClass({
+}, class ExtensionIcons extends GObject.Object{
+	_init(extensionDir) {
+	    this._extensionDir = extensionDir;
+	    this.iconTheme = new St.IconTheme();
 	}
+
+	getCustomIcon(icon_name) {
+        if (this.iconTheme.has_icon(icon_name)) {
+            return Gio.ThemedIcon.new_with_default_fallbacks(icon_name);
+        }
+        let icon_path = this._extensionDir.get_child('icons').get_child(icon_name + ".svg").get_path();
+        return Gio.FileIcon.new(Gio.File.new_for_path(icon_path));
+    }
+});
+
+const HighlightIndicatorStyle = GObject.registerClass({
+}, class HighlightIndicatorStyle extends GObject.Object{
+	_init(indicator) {
+		this._indicator = indicator;
+		this._config = indicator.config;
+		this._icons = indicator.icons;
+		this._numIcon = indicator.numIcon;
+		this._capsIcon = indicator.capsIcon;
+
+        this.displayState(this._indicator.getNumlockState(), this._indicator.getCapslockState());
+    }
 
 	displayState(numlock_state, capslock_state) {
-		if (numlock_state)
-			this.numIcon.set_gicon(this.panelButton.getCustIcon('numlock-enabled-symbolic'));
-		else
-			this.numIcon.set_gicon(this.panelButton.getCustIcon('numlock-disabled-symbolic'));
+        if (this._config.getNumlockIndicator() == VISIBILITY_NEVER) {
+            this._numIcon.hide();
+        } else if (this._config.getNumlockIndicator() == VISIBILITY_WHEN_ACTIVE) {
+            if (numlock_state) {
+                this._numIcon.show();
+                this._numIcon.set_gicon(this._icons.getCustomIcon('numlock-enabled-symbolic'));
+            } else {
+                this._numIcon.hide();
+            }
+        } else if (this._config.getNumlockIndicator() == VISIBILITY_ALWAYS) {
+            this._numIcon.show();
+            this._numIcon.set_gicon(this._icons.getCustomIcon(
+                numlock_state ? 'numlock-enabled-symbolic' : 'numlock-disabled-symbolic'
+            ));
+        }
 
-		if (capslock_state)
-			this.capsIcon.set_gicon(this.panelButton.getCustIcon('capslock-enabled-symbolic'));
-		else
-			this.capsIcon.set_gicon(this.panelButton.getCustIcon('capslock-disabled-symbolic'));
+        // Handle Capslock visibility
+        if (this._config.getCapslockIndicator() == VISIBILITY_NEVER) {
+            this._capsIcon.hide();
+        } else if (this._config.getCapslockIndicator() == VISIBILITY_WHEN_ACTIVE) {
+            if (capslock_state) {
+                this._capsIcon.show();
+                this._capsIcon.set_gicon(this._icons.getCustomIcon('capslock-enabled-symbolic'));
+            } else {
+                this._capsIcon.hide();
+            }
+        } else if (this._config.getCapslockIndicator() == VISIBILITY_ALWAYS) {
+            this._capsIcon.show();
+            this._capsIcon.set_gicon(this._icons.getCustomIcon(
+                capslock_state ? 'capslock-enabled-symbolic' : 'capslock-disabled-symbolic'
+            ));
+        }
+
+        // Update overall indicator visibility
+        this._indicator.visible = 
+            (this._numIcon.visible || this._capsIcon.visible);
 	}
 });
 
-const VisibilityIndicator = GObject.registerClass(
-class VisibilityIndicator extends GObject.Object{
-	_init(panelButton) {
-		this.panelButton = panelButton;
-		this.config = panelButton.config;
-		this.numIcon = panelButton.numIcon;
-		this.capsIcon = panelButton.capsIcon;
+const VisibilityIndicatorStyle = GObject.registerClass({
+}, class VisibilityIndicatorStyle extends GObject.Object{
+	_init(indicator) {
+        this._indicator = indicator;
+        this._config = indicator.config;
+        this._icons = indicator.icons;
+        this._numIcon = indicator.numIcon;
+        this._capsIcon = indicator.capsIcon;
 
-		this.numIcon.set_gicon(this.panelButton.getCustIcon('numlock-enabled-symbolic'));
-		this.capsIcon.set_gicon(this.panelButton.getCustIcon('capslock-enabled-symbolic'));
+		this._numIcon.set_gicon(this._icons.getCustomIcon('numlock-enabled-symbolic'));
+		this._capsIcon.set_gicon(this._icons.getCustomIcon('capslock-enabled-symbolic'));
 	}
 
 	displayState(numlock_state, capslock_state) {
 		if (numlock_state) {
-			this.numIcon.show();
+			this._numIcon.show();
 		} else
-			this.numIcon.hide();
+			this._numIcon.hide();
 
 		if (capslock_state) {
-			this.capsIcon.show();
+			this._capsIcon.show();
 		} else
-			this.capsIcon.hide();
+			this._capsIcon.hide();
 
-		this.panelButton.visible = numlock_state || capslock_state;
+		this._indicator.visible = numlock_state || capslock_state;
 	}
 });
 
-const VisibilityIndicatorCapslock = GObject.registerClass(
-class VisibilityIndicatorCapslock extends GObject.Object{
-	_init(panelButton) {
-		this.panelButton = panelButton;
-		this.config = panelButton.config;
-		this.capsIcon = panelButton.capsIcon;
+const VisibilityIndicatorCapslockStyle = GObject.registerClass({
+}, class VisibilityIndicatorCapslockStyle extends GObject.Object{
+	_init(indicator) {
+        this._indicator = indicator;
+        this._config = indicator.config;
+        this._icons = indicator.icons;
+        this._capsIcon = indicator.capsIcon;
 
-		panelButton.numIcon.hide();
-		this.capsIcon.set_gicon(this.panelButton.getCustIcon('capslock-enabled-symbolic'));
+		indicator.numIcon.hide();
+		this._capsIcon.set_gicon(this._icons.getCustomIcon('capslock-enabled-symbolic'));
 	}
 
 	displayState(numlock_state, capslock_state) {
 		if (capslock_state) {
-			this.capsIcon.show();
-		} else
-			this.capsIcon.hide();
-
-		this.panelButton.visible = capslock_state;
+			this._capsIcon.show();
+		} else {
+			this._capsIcon.hide();
+        }
+		this._indicator.visible = capslock_state;
 	}
 });
 
-const Configuration = GObject.registerClass(
-class Configuration extends GObject.Object{
-	_init() {
-		this.settings = Utils.getSettings(Me);
+const Configuration = GObject.registerClass({
+}, class Configuration extends GObject.Object{
+	_init(settings) {
+		this.settings = settings;
 	}
 
+	// Old configuration functions
 	isShowNotifications() {
 		let notification_prefs = this.settings.get_string(NOTIFICATIONS);
 		return notification_prefs == NOTIFICATIONS_ON || notification_prefs == NOTIFICATIONS_OSD;
@@ -346,9 +401,11 @@ class Configuration extends GObject.Object{
 	}
 
 	isNotifyNumLock() {
-		let widget_style = this.settings.get_string(STYLE);
-		return this.isShowNotifications() && widget_style != STYLE_CAPSLOCK_ONLY;
-	}
+        let widget_style = this.settings.get_string(STYLE);
+        return this.isShowNotifications() &&
+            widget_style != STYLE_CAPSLOCK_ONLY &&
+            widget_style != STYLE_SHOWHIDE_CAPSLOCK;
+    }
 
 	isNotifyCapsLock() {
 		let widget_style = this.settings.get_string(STYLE);
@@ -373,5 +430,30 @@ class Configuration extends GObject.Object{
 	isVisibilityStyleCapslock() {
 		let widget_style = this.settings.get_string(STYLE);
 		return widget_style == STYLE_SHOWHIDE_CAPSLOCK;
+	}
+
+	// New configuration functions
+	isCapslockEnabled() {
+		return this.settings.get_boolean('capslock-enabled');
+	}
+
+	getCapslockNotification() {
+		return this.settings.get_string('capslock-notification');
+	}
+
+	getCapslockIndicator() {
+		return this.settings.get_string('capslock-indicator');
+	}
+
+	isNumlockEnabled() {
+		return this.settings.get_boolean('numlock-enabled');
+	}
+
+	getNumlockNotification() {
+		return this.settings.get_string('numlock-notification');
+	}
+
+	getNumlockIndicator() {
+		return this.settings.get_string('numlock-indicator');
 	}
 });

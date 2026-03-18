@@ -1,15 +1,15 @@
-'use strict';
+import { Clutter, GObject, St } from '../dependencies/gi.js';
+import { Main } from '../dependencies/shell.js';
+import * as SwitcherPopup49 from '../dependencies/unexported/switcherPopup.js';
+import * as SwitcherPopup48 from '../dependencies/unexported/switcherPopup-48.js';
 
-const { Clutter, GObject, Meta, Shell, St } = imports.gi;
-const { main: Main, switcherPopup: SwitcherPopup } = imports.ui;
+import { Direction, Orientation } from '../common.js';
+import { Util } from './utility.js';
+import { TilingWindowManager as Twm } from './tilingWindowManager.js';
+import * as AltTab from './altTab.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const { Direction, Orientation } = Me.imports.src.common;
-const Util = Me.imports.src.extension.utility.Util;
-const Twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
-const AltTab = Me.imports.src.extension.altTab;
+const [MajorShellVersion] = Util.getShellVersion();
+const SwitcherPopup = MajorShellVersion < 49 ? SwitcherPopup48 : SwitcherPopup49;
 
 /**
  * Classes for the Tiling Popup, which opens when tiling a window
@@ -17,7 +17,7 @@ const AltTab = Me.imports.src.extension.altTab;
  * Mostly based on GNOME's altTab.js
  */
 
-var TilingSwitcherPopup = GObject.registerClass({
+export const TilingSwitcherPopup = GObject.registerClass({
     Signals: {
         // Bool indicates whether the Tiling Popup was canceled
         // (or if a window was tiled with this popup)
@@ -25,15 +25,16 @@ var TilingSwitcherPopup = GObject.registerClass({
     }
 }, class TilingSwitcherPopup extends AltTab.TilingAppSwitcherPopup {
     /**
-     * @param {Meta.Windows[]} openWindows an array of Meta.Windows, which this
+     * @param {Meta.Window[]} openWindows an array of Meta.Windows, which this
      *      popup offers to tile.
      * @param {Rect} freeScreenRect the Rect, which the popup will tile a window
      *      to. The popup will be centered in this rect.
      * @param {boolean} allowConsecutivePopup allow the popup to create another
      *      Tiling Popup, if there is still unambiguous free screen space after
      *      this popup tiled a window.
+     * @param {boolean} skipAnim
      */
-    _init(openWindows, freeScreenRect, allowConsecutivePopup = true) {
+    _init(openWindows, freeScreenRect, allowConsecutivePopup = true, skipAnim = false) {
         this._freeScreenRect = freeScreenRect;
         this._shadeBG = null;
         this._monitor = -1;
@@ -48,13 +49,14 @@ var TilingSwitcherPopup = GObject.registerClass({
         // or null, if the popup was closed with tiling a window
         this.tiledWindow = null;
         this._allowConsecutivePopup = allowConsecutivePopup;
+        this._skipAnim = skipAnim;
 
         this._switcherList = new TSwitcherList(this, openWindows);
         this._items = this._switcherList.icons;
 
         // Destroy popup when touching outside of popup
         this.connect('touch-event', () => {
-            if (Meta.is_wayland_compositor())
+            if (Util.is_wayland_compositor())
                 this.fadeAndDestroy();
 
             return Clutter.EVENT_PROPAGATE;
@@ -74,10 +76,13 @@ var TilingSwitcherPopup = GObject.registerClass({
             return false;
 
         const grab = Main.pushModal(this);
-        // We expect at least a keyboard grab here
-        if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
-            Main.popModal(grab);
-            return false;
+
+        if (MajorShellVersion < 50) {
+            // We expect at least a keyboard grab here
+            if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
+                Main.popModal(grab);
+                return false;
+            }
         }
 
         this._grab = grab;
@@ -86,7 +91,7 @@ var TilingSwitcherPopup = GObject.registerClass({
         this._switcherList.connect('item-activated', this._itemActivated.bind(this));
         this._switcherList.connect('item-entered', this._itemEntered.bind(this));
         this._switcherList.connect('item-removed', this._itemRemoved.bind(this));
-        this.add_actor(this._switcherList);
+        this.add_child(this._switcherList);
 
         // Need to force an allocation so we can figure out
         // whether we need to scroll when selecting
@@ -210,13 +215,14 @@ var TilingSwitcherPopup = GObject.registerClass({
     }
 
     vfunc_button_press_event(buttonEvent) {
-        const btn = buttonEvent.button;
+        const btn = buttonEvent.get_button();
         if (btn === Clutter.BUTTON_MIDDLE || btn === Clutter.BUTTON_SECONDARY) {
             this._finish(global.get_current_time());
             return Clutter.EVENT_PROPAGATE;
         }
 
-        return super.vfunc_button_press_event(buttonEvent);
+        if (MajorShellVersion < 49)
+            return super.vfunc_button_press_event(buttonEvent);
     }
 
     _keyPressHandler(keysym) {
@@ -304,7 +310,11 @@ var TilingSwitcherPopup = GObject.registerClass({
         // tile group won't be accidentally raised.
         Twm.clearTilingProps(window.get_id());
         window.activate(global.get_current_time());
-        Twm.tile(window, rect, { monitorNr: this._monitor, openTilingPopup: this._allowConsecutivePopup });
+        Twm.tile(window, rect, {
+            monitorNr: this._monitor,
+            openTilingPopup: this._allowConsecutivePopup,
+            skipAnim: this._skipAnim
+        });
     }
 
     // Dont _finish(), if no mods are pressed

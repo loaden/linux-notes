@@ -1,21 +1,13 @@
-'use strict';
-
-const { Gio, Gtk, GObject } = imports.gi;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const Gettext = imports.gettext;
-const Domain = Gettext.domain(Me.metadata.uuid);
-const _ = Domain.gettext;
+import { Gio, Gtk, GObject } from '../dependencies/prefs/gi.js';
+import { _ } from '../dependencies/prefs.js';
 
 /**
  * Multiple LayoutRowEntries make up a LayoutRow.js. See that file for more info.
  */
 
-var LayoutRowEntry = GObject.registerClass({
+export const LayoutRowEntry = GObject.registerClass({
     GTypeName: 'TilingLayoutRowEntry',
-    Template: Gio.File.new_for_path(`${Me.path}/src/ui/layoutRowEntry.ui`).get_uri(),
+    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
     InternalChildren: [
         'rectEntry',
         'rectLabel',
@@ -42,6 +34,7 @@ var LayoutRowEntry = GObject.registerClass({
         // Show a placeholder on the first entry, if it's empty
         if (!text) {
             if (idx === 0) {
+                // Translators: This is a placeholder text of an entry in the prefs when defining a tiling layout.
                 const placeholder = _("'User Guide' for help...");
                 this._rectEntry.set_placeholder_text(placeholder);
             } else {
@@ -54,9 +47,6 @@ var LayoutRowEntry = GObject.registerClass({
         this._rectAppButton.set_icon_name(iconName);
     }
 
-    /**
-     * @param {Gtk.Button} appButton src of the event.
-     */
     _onAppButtonClicked() {
         // Reset app button, if it already has an app attached
         if (this._item.appId) {

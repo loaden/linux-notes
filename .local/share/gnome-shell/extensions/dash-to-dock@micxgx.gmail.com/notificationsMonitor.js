@@ -1,29 +1,20 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-/* exported NotificationsMonitor */
+import {Gio} from './dependencies/gi.js';
+import {Main} from './dependencies/shell/ui.js';
 
-const { signals: Signals } = imports;
+import {
+    Docking,
+    Utils,
+} from './imports.js';
 
-const {
-    Gio,
-} = imports.gi;
+const {signals: Signals} = imports;
 
-const {
-    main: Main,
-} = imports.ui;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const {
-    docking: Docking,
-    utils: Utils,
-} = Me.imports;
 const Labels = Object.freeze({
     SOURCES: Symbol('sources'),
     NOTIFICATIONS: Symbol('notifications'),
 });
-var NotificationsMonitor = class NotificationsManagerImpl {
+export class NotificationsMonitor {
     constructor() {
         this._settings = new Gio.Settings({
             schema_id: 'org.gnome.desktop.notifications',
@@ -59,7 +50,7 @@ var NotificationsMonitor = class NotificationsManagerImpl {
 
     destroy() {
         this.emit('destroy');
-        this._signalsHandler.destroy();
+        this._signalsHandler?.destroy();
         this._signalsHandler = null;
         this._appNotifications = null;
         this._settings = null;
@@ -101,8 +92,9 @@ var NotificationsMonitor = class NotificationsManagerImpl {
 
                 source.notifications.forEach(notification => {
                     const app = notification.source?.app ?? notification.source?._app;
+                    const appId = app?.id ?? app?._appId;
 
-                    if (app?.id) {
+                    if (appId) {
                         if (notification.resident) {
                             if (notification.acknowledged)
                                 return;
@@ -115,8 +107,8 @@ var NotificationsMonitor = class NotificationsManagerImpl {
                         this._signalsHandler.addWithLabel(Labels.NOTIFICATIONS,
                             notification, 'destroy', () => this._checkNotifications());
 
-                        this._appNotifications[app.id] =
-                            (this._appNotifications[app.id] ?? 0) + 1;
+                        this._appNotifications[appId] =
+                            (this._appNotifications[appId] ?? 0) + 1;
                     }
                 });
             });
@@ -124,6 +116,6 @@ var NotificationsMonitor = class NotificationsManagerImpl {
 
         this.emit('changed');
     }
-};
+}
 
 Signals.addSignalMethods(NotificationsMonitor.prototype);

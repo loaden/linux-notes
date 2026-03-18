@@ -1,9 +1,5 @@
-'use strict';
-
-const { Adw, Gdk, Gio, GObject, Gtk } = imports.gi;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import { Adw, Gdk, GObject, Gtk } from '../dependencies/prefs/gi.js';
+import { _ } from '../dependencies/prefs.js';
 
 /**
  * A Widget to implement the shortcuts in the preference window.
@@ -15,9 +11,9 @@ const Me = ExtensionUtils.getCurrentExtension();
  * https://gitlab.com/rmnvgr/nightthemeswitcher-gnome-shell-extension/-/blob/main/src/utils.js
  */
 
-var ShortcutListener = GObject.registerClass({
+export const ShortcutListener = GObject.registerClass({
     GTypeName: 'ShortcutListener',
-    Template: Gio.File.new_for_path(`${Me.path}/src/ui/shortcutListener.ui`).get_uri(),
+    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
     InternalChildren: ['keybindingLabel', 'clearButton', 'eventKeyController'],
     Properties: {
         keybinding: GObject.ParamSpec.string(
@@ -103,7 +99,7 @@ var ShortcutListener = GObject.registerClass({
             return l ? `${label} / ${l}` : label;
         }, '');
 
-        return kbLabel || 'Disabled';
+        return kbLabel || _('Disabled');
     }
 
     _onActivated() {
@@ -167,7 +163,7 @@ var ShortcutListener = GObject.registerClass({
      * @returns {boolean} `true` if the key combo is a valid binding.
      */
     _isBindingValid({ mask, keycode, keyval }) {
-        if ((mask === 0 || mask === Gdk.SHIFT_MASK) && keycode !== 0) {
+        if ((mask === 0 || mask === Gdk.ModifierType.SHIFT_MASK) && keycode !== 0) {
             if (
                 (keyval >= Gdk.KEY_a && keyval <= Gdk.KEY_z) ||
                 (keyval >= Gdk.KEY_A && keyval <= Gdk.KEY_Z) ||

@@ -14,22 +14,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-/* exported TrayIconsManager */
+import Shell from 'gi://Shell';
 
-const Shell = imports.gi.Shell;
-const Main = imports.ui.main;
-const Signals = imports.signals;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-
-const Extension = ExtensionUtils.getCurrentExtension();
-const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon;
-const Util = Extension.imports.util;
-const SettingsManager = Extension.imports.settingsManager;
+import * as IndicatorStatusIcon from './indicatorStatusIcon.js';
+import * as Util from './util.js';
+import * as SettingsManager from './settingsManager.js';
 
 let trayIconsManager;
 
-var TrayIconsManager = class TrayIconsManager {
+export class TrayIconsManager extends Signals.EventEmitter {
     static initialize() {
         if (!trayIconsManager)
             trayIconsManager = new TrayIconsManager();
@@ -41,6 +37,8 @@ var TrayIconsManager = class TrayIconsManager {
     }
 
     constructor() {
+        super();
+
         if (trayIconsManager)
             throw new Error('TrayIconsManager is already constructed');
 
@@ -57,11 +55,16 @@ var TrayIconsManager = class TrayIconsManager {
             this._disable();
     }
 
+    _getPanelBgColor() {
+        return Main.panel?.get_parent()
+            ? Main.panel.get_theme_node()?.get_background_color() : null;
+    }
+
     _enable() {
         if (this._tray)
             return;
 
-        this._tray = new Shell.TrayManager();
+        this._tray = new Shell.TrayManager({bgColor: this._getPanelBgColor()});
         Util.connectSmart(this._tray, 'tray-icon-added', this, this.onTrayIconAdded);
         Util.connectSmart(this._tray, 'tray-icon-removed', this, this.onTrayIconRemoved);
 
@@ -73,14 +76,8 @@ var TrayIconsManager = class TrayIconsManager {
             return;
 
         IndicatorStatusIcon.getTrayIcons().forEach(i => i.destroy());
-        if (this._tray.unmanage_screen) {
-            this._tray.unmanage_screen();
-            this._tray = null;
-        } else {
-            // FIXME: This is very ugly, but it's needed by old shell versions
-            this._tray = null;
-            imports.system.gc(); // force finalizing tray to unmanage screen
-        }
+        this._tray.unmanage_screen();
+        this._tray = null;
     }
 
     onTrayIconAdded(_tray, icon) {
@@ -103,5 +100,4 @@ var TrayIconsManager = class TrayIconsManager {
         this._disable();
         trayIconsManager = null;
     }
-};
-Signals.addSignalMethods(TrayIconsManager.prototype);
+}

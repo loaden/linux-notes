@@ -1,15 +1,11 @@
 // -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
 
-/* exported LauncherEntryRemoteModel */
+import {Gio} from './dependencies/gi.js';
+import {DBusMenuUtils} from './imports.js';
 
-const { Gio } = imports.gi;
+const DBusMenu = await DBusMenuUtils.haveDBusMenu();
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { dbusmenuUtils: DbusmenuUtils } = Me.imports;
-
-const Dbusmenu = DbusmenuUtils.haveDBusMenu();
-
-var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
+export class LauncherEntryRemoteModel {
     constructor() {
         this._entrySourceStacks = new Map();
         this._remoteMaps = new Map();
@@ -119,7 +115,7 @@ var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
             remoteMap.set(appId, remote = Object.assign({}, launcherEntryDefaults));
 
         for (const name in properties) {
-            if (name === 'quicklist' && Dbusmenu) {
+            if (name === 'quicklist' && DBusMenu) {
                 const quicklistPath = properties[name].unpack();
                 if (quicklistPath &&
                     (!remote._quicklistMenuClient ||
@@ -132,7 +128,7 @@ var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
                         // This property should not be enumerable
                         Object.defineProperty(remote, '_quicklistMenuClient', {
                             writable: true,
-                            value: menuClient = new Dbusmenu.Client({
+                            value: menuClient = new DBusMenu.Client({
                                 dbus_name: senderName,
                                 dbus_object: quicklistPath,
                             }),
@@ -148,7 +144,7 @@ var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
                             }
                         }
                     };
-                    menuClient.connect(Dbusmenu.CLIENT_SIGNAL_ROOT_CHANGED, handler);
+                    menuClient.connect(DBusMenu.CLIENT_SIGNAL_ROOT_CHANGED, handler);
                 }
             } else {
                 remote[name] = properties[name].unpack();
@@ -158,12 +154,13 @@ var LauncherEntryRemoteModel = class DashToDockLauncherEntryRemoteModel {
         const sourceStack = this._lookupStackById(appId);
         sourceStack.target._emitChangedEvents(sourceStack.update(remote));
     }
-};
+}
 
 const launcherEntryDefaults = Object.freeze({
     count: 0,
     progress: 0,
     urgent: false,
+    updating: false,
     quicklist: null,
     'count-visible': false,
     'progress-visible': false,
@@ -182,7 +179,7 @@ const LauncherEntry = class DashToDockLauncherEntry {
 
         callback(this, this);
         const id = this._nextId++;
-        const handler = { id, callback };
+        const handler = {id, callback};
         eventNames.forEach(name => {
             let handlerList = this._handlers.get(name);
             if (!handlerList)
@@ -227,7 +224,7 @@ const LauncherEntry = class DashToDockLauncherEntry {
 };
 
 for (const [name, defaultValue] of Object.entries(launcherEntryDefaults)) {
-    const jsName = name.replace(/-/g, '_');
+    const jsName = name.replaceAll('-', '_');
     LauncherEntry.prototype[jsName] = defaultValue;
     if (jsName !== name) {
         Object.defineProperty(LauncherEntry.prototype, name, {
