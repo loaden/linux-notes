@@ -1,0 +1,20 @@
+# required by @selected
+# required by @world (argument)
+=media-fonts/source-han-serif-2.003 ~amd64
+# required by media-libs/openslide-4.0.0::gentoo-zh
+# required by net-im/tencent-qq-3.2.26_p260311::gentoo-zh
+# required by tencent-qq (argument)
+=media-libs/libdicom-1.2.0 ~amd64
+# required by net-im/tencent-qq-3.2.26_p260311::gentoo-zh
+# required by tencent-qq (argument)
+=media-libs/openslide-4.0.0 ~amd64
+# required by net-im/dingtalk-8.1.0.6021101::gentoo-zh
+# required by net-im/dingtalk (argument)
+=dev-libs/libthai-0.1.30-r1 ~amd64
+# required by net-im/dingtalk-8.1.0.6021101::gentoo-zh
+# required by net-im/dingtalk (argument)
+=dev-util/execstack-0_pre20130503 ~amd64
+# required by dev-libs/libthai-0.1.30-r1::gentoo
+# required by net-im/dingtalk-8.1.0.6021101::gentoo-zh
+# required by net-im/dingtalk (argument)
+=dev-libs/libdatrie-0.2.14-r1 ~amd64
