@@ -270,25 +270,28 @@
 
 ### 启动音频服务
 
-  ```shell
-  systemctl --user enable --now pulseaudio
-  systemctl --user status pulseaudio
-  ```
-
-### 启动PipeWire服务
-
-* 必须启用，否则PipeWire相关功能不正常，例如OBS捕获屏幕黑屏等。
+* 启用用户音频服务
 
   ```shell
   systemctl --user enable --now pipewire
   systemctl --user enable --now wireplumber
   ```
 
-  * 这个依赖也是必须的
+  * 确保安装必要的依赖
     > `# emerge -av xdg-desktop-portal-wlr`
 
-* 查询
+  * 推荐添加到pipewire用户组
+    > `# usermod -aG pipewire <用户名>`
+
+  * 查询
     > `$ LANG=C pactl info | grep "Server Name"`
+
+* 备用 pulseaudio
+
+  ```shell
+  systemctl --user enable --now pulseaudio
+  systemctl --user status pulseaudio
+  ```
 
 ### 启用[扩展库](etc/portage/repos.conf/eselect-repo.conf)
 
@@ -422,7 +425,7 @@ polkit.addAdminRule(function(action, subject) {
 
 ### 快照还原
 
-* 安装
+* Timeshift只支持安装在`@`子卷中的系统，并且家目录挂载在`@home`子卷上。
 
   ```shell
   # emerge -avg --autounmask timeshift btrfs-progs
@@ -435,7 +438,11 @@ polkit.addAdminRule(function(action, subject) {
   # usermod -aG cron <用户名>
   ```
 
-* Timeshift只支持安装在`@`子卷中的系统，并且家目录挂载在`@home`子卷上。
+* 快照助手
+
+  ```shell
+  # emerge -avg btrfs-assistant snapper btrfsmaintenance
+  ```
 
 ### Overlay仓库
 
@@ -527,7 +534,7 @@ polkit.addAdminRule(function(action, subject) {
   $ e-file libunwind.a
   ```
 
-### 清除过时包
+### 清理过时包
   >
   > `# emerge --ask --depclean` </br>
   > `# emerge -ac`
