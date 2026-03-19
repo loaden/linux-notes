@@ -1,5 +1,7 @@
+app-admin/btrfs-assistant
 app-admin/sudo
 app-arch/file-roller
+app-backup/snapper
 app-backup/timeshift
 app-editors/gnome-text-editor
 app-editors/nano
@@ -37,11 +39,13 @@ net-misc/telnet-bsd
 net-print/cups-filters
 net-print/hplip-plugin
 sys-apps/arch-chroot
+sys-apps/flatpak
 sys-apps/gnome-disk-utility
 sys-boot/efibootmgr
 sys-boot/grub
 sys-boot/os-prober
 sys-fs/btrfs-progs
+sys-fs/btrfsmaintenance
 sys-kernel/gentoo-kernel-bin
 sys-kernel/linux-firmware
 www-client/microsoft-edge
