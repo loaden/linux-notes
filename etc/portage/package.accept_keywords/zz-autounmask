@@ -18,3 +18,5 @@
 # required by net-im/dingtalk-8.1.0.6021101::gentoo-zh
 # required by net-im/dingtalk (argument)
 =dev-libs/libdatrie-0.2.14-r1 ~amd64
+# required by obs-studio (argument)
+=media-video/obs-studio-32.1.0 ~amd64
