@@ -556,14 +556,6 @@ polkit.addAdminRule(function(action, subject) {
   >
   > `# eclean-pkg --deep`
 
-### 清理旧内核
-
-  ```shell
-  # emerge -av eclean-kernel
-  # eclean-kernel --list-kernels
-  # eclean-kernel -n 2
-  ```
-
 ### 查询已安装包
   >
   > `$ eix xdg-desktop- --installed`
