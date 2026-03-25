@@ -527,6 +527,10 @@ polkit.addAdminRule(function(action, subject) {
   > `$ eix --installed --only-in-overlay gentoo-zh` </br>
   > `$ eix -I --only-in-overlay gentoo-zh`
 
+### 查询已安装的不稳定包
+  >
+  > `$ eix --installed-unstable`
+
 ### 检查当前系统的glibc版本
   >
   > `$ equery list glibc` </br>
