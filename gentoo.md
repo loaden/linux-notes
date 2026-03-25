@@ -522,6 +522,11 @@ polkit.addAdminRule(function(action, subject) {
   > `$ equery list '*'` </br>
   > `$ equery l '*'`
 
+### 查询非官方仓库已安装包
+  >
+  > `$ eix --installed --only-in-overlay gentoo-zh` </br>
+  > `$ eix -I --only-in-overlay gentoo-zh`
+
 ### 检查当前系统的glibc版本
   >
   > `$ equery list glibc` </br>
