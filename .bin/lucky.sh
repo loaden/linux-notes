@@ -12,4 +12,4 @@ ln -s /home/lucky/.local/share/fonts ~/.local/share/
 ln -s /home/lucky/.config/ibus/rime ~/.config/ibus/
 ln -s /home/lucky/.cargo ~
 ln -s /home/lucky/.rustup ~
-
+ln -s /home/lucky/.local/share/flatpak ~/.local/share/
