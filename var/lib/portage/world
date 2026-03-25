@@ -10,11 +10,11 @@ app-eselect/eselect-repository
 app-i18n/ibus-rime
 app-misc/fastfetch
 app-misc/neofetch
-app-office/wps-office
 app-portage/eix
 app-portage/gentoolkit
 app-shells/bash-completion
 app-text/evince
+app-text/tree
 dev-vcs/git
 gnome-base/gnome-light
 gnome-extra/gnome-calculator
