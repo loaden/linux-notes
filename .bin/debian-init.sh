@@ -1,5 +1,5 @@
 #!/bin/bash
-# 维护：Yuchen Deng [loaden] 钉钉群：35948877
+# 维护：Yuchen Deng - Loaden
 # QQ群：19346666、111601117
 
 #sudo apt purge evolution -y
@@ -25,4 +25,3 @@ sudo apt install telnet -y #远程访问
 sudo apt install unar -y #解压缩
 
 sudo apt autopurge -y
-
