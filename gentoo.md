@@ -146,20 +146,20 @@
   sync-uri = https://mirrors.bfsu.edu.cn/gentoo/releases/amd64/binpackages/23.0/x86-64-v3/
   ```
 
-  * 可选择全局选项（不建议）
-  > `# nano /etc/portage/make.conf`
-
-  ```text
-  FEATURES="${FEATURES} getbinpkg"
-  FEATURES="${FEATURES} binpkg-request-signature"
-  PORTAGE_TRUST_HELPER=true
-  ```
-
   * 获取密钥
      > `# rm -rf /etc/portage/gnupg ; getuto`
 
   * 测试安装二进制包
     > `# emerge -avg nano`
+
+  * 可选择全局选项（不建议）
+    > `# nano /etc/portage/make.conf`
+
+    ```text
+    FEATURES="${FEATURES} getbinpkg"
+    FEATURES="${FEATURES} binpkg-request-signature"
+    PORTAGE_TRUST_HELPER=true
+    ```
 
 * 时区
 
@@ -286,7 +286,7 @@
   * 查询
     > `$ LANG=C pactl info | grep "Server Name"`
 
-* 备用 pulseaudio
+* 备用 pulseaudio, 音频工作应忽略
 
   ```shell
   systemctl --user enable --now pulseaudio
@@ -376,7 +376,7 @@ polkit.addAdminRule(function(action, subject) {
 ### GNOME组件补充
 
   ```shell
-  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince eog file-roller
+  # emerge -avug --autounmask gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince file-roller loupe
   ```
 
 ### 常用软件
@@ -393,13 +393,13 @@ polkit.addAdminRule(function(action, subject) {
 * 批量安装
 
   ```shell
-  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio ffmpeg kdenlive flameshot
+  # emerge -avug --autounmask microsoft-edge vscode celluloid audacious gimp obs-studio
   ```
 
 ### 扩展软件
 
   ```shell
-  # emerge -avug --autounmask wps-office dingtalk tencent-qq wechat neofetch xlsclients
+  # emerge -avug --autounmask neofetch fastfetch xlsclients dingtalk tencent-qq wechat wps-office
   ```
 
 ### 远程桌面
@@ -547,6 +547,9 @@ polkit.addAdminRule(function(action, subject) {
   >
   > `# emerge --ask --depclean` </br>
   > `# emerge -ac`
+
+* 可能需要先执行
+     > `# emerge -avuDNg @world --with-bdeps=y`
 
 ### 清理源文件
   >
