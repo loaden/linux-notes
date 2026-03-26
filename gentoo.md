@@ -195,7 +195,7 @@
 * 内核与硬件驱动
 
   ```shell
-  # emerge -av gentoo-kernel-bin linux-firmware
+  # emerge -avg gentoo-kernel-bin linux-firmware
   # dispatch-conf
   ```
 
@@ -203,7 +203,7 @@
   > `# emerge -avuDNg @world`
 
 * 中文字体
-  > `# emerge -av source-han-sans`
+  > `# emerge -avg source-han-sans`
 
 * 创建与配置用户
 
@@ -217,7 +217,7 @@
 * 启动引导
 
   ```shell
-  # emerge -av grub efibootmgr
+  # emerge -avg grub efibootmgr
   # grub-install
   # grub-mkconfig -o /boot/grub/grub.cfg
   ```
@@ -278,7 +278,7 @@
   ```
 
   * 确保安装必要的依赖
-    > `# emerge -av xdg-desktop-portal-wlr`
+    > `# emerge -avg xdg-desktop-portal-wlr`
 
   * 推荐添加到pipewire用户组
     > `# usermod -aG pipewire <用户名>`
@@ -539,7 +539,7 @@ polkit.addAdminRule(function(action, subject) {
 ### 通过文件查找未安装包
 
   ```shell
-  # emerge -av pfl
+  # emerge -avg pfl
   $ e-file libunwind.a
   ```
 
@@ -623,7 +623,9 @@ polkit.addAdminRule(function(action, subject) {
 ### Wayland完美截图
 
 * 安装工具
-  > `# emerge -avg --autounmask gnome-screenshot wl-clipboard satty`
+  > `# emerge -avg gnome-screenshot wl-clipboard` </br>
+  > `# emerge -avg satty --autounmask` </br>
+  > 或者 `$ cargo install satty`
 
 * 编写[截图脚本](.bin/shot.sh)
 * 设置 - 键盘 - 自定义快捷键 “Shift+Super+S”
