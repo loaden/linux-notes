@@ -620,6 +620,15 @@ polkit.addAdminRule(function(action, subject) {
   > `script --command "flameshot gui"`
 * 方法二：终端运行 `nohup flameshot &`
 
+### Wayland完美截图
+
+* 安装工具
+  > `# emerge -avg --autounmask gnome-screenshot wl-clipboard satty`
+
+* 编写[截图脚本](.bin/shot.sh)
+* 设置 - 键盘 - 自定义快捷键 “Shift+Super+S”
+* [自定义配置](.config/satty/config.toml)
+
 ### 修复编译链接错误
 
   一般是二进制的包与当前编译的包使用了不同的编译器，错误信息如下:

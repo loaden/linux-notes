@@ -1,0 +1,20 @@
+[general]
+resize = { mode = "size", width=1280, height=720 }
+initial-tool = "brush"
+corner-roundness = 5
+actions-on-right-click = ["save-to-file-as"]
+actions-on-enter = ["save-to-clipboard"]
+
+[font]
+family = "宋体"
+style = "Bold"
+
+[color-palette]
+palette = [
+    "#00ffff",
+    "#a52a2a",
+    "#dc143c",
+    "#ff1493",
+    "#ffd700",
+    "#008000",
+]
