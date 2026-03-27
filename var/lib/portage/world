@@ -1,7 +1,6 @@
 app-admin/btrfs-assistant
 app-admin/sudo
 app-arch/file-roller
-app-backup/snapper
 app-backup/timeshift
 app-editors/gnome-text-editor
 app-editors/nano
@@ -18,6 +17,8 @@ app-text/tree
 dev-vcs/git
 gnome-base/gnome-light
 gnome-extra/gnome-calculator
+gnome-extra/gnome-clocks
+gnome-extra/gnome-logs
 gnome-extra/gnome-tweaks
 gui-apps/wl-clipboard
 gui-libs/xdg-desktop-portal-wlr
@@ -32,9 +33,6 @@ media-gfx/loupe
 media-sound/audacious
 media-video/celluloid
 media-video/ffmpeg
-media-video/obs-studio
-net-im/dingtalk
-net-misc/remmina
 net-misc/telnet-bsd
 net-print/cups-filters
 net-print/hplip-plugin
