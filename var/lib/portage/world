@@ -17,8 +17,6 @@ app-text/tree
 dev-vcs/git
 gnome-base/gnome-light
 gnome-extra/gnome-calculator
-gnome-extra/gnome-clocks
-gnome-extra/gnome-logs
 gnome-extra/gnome-tweaks
 gui-apps/wl-clipboard
 gui-libs/xdg-desktop-portal-wlr
@@ -29,10 +27,10 @@ media-fonts/source-han-serif
 media-fonts/ubuntu-font-family
 media-gfx/gimp
 media-gfx/gnome-screenshot
-media-gfx/loupe
 media-sound/audacious
 media-video/celluloid
 media-video/ffmpeg
+net-im/dingtalk
 net-misc/telnet-bsd
 net-print/cups-filters
 net-print/hplip-plugin

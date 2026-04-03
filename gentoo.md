@@ -376,7 +376,8 @@ polkit.addAdminRule(function(action, subject) {
 ### GNOME组件补充
 
   ```shell
-  # emerge -avug --autounmask gnome-logs gnome-clocks gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince file-roller loupe
+  # euse -p sys-apps/gnome-disk-utility -E fat
+  # emerge -avug gnome-text-editor gnome-disk-utility gnome-calculator gnome-tweaks evince file-roller
   ```
 
 ### 常用软件
