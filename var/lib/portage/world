@@ -31,6 +31,8 @@ media-sound/audacious
 media-video/celluloid
 media-video/ffmpeg
 net-im/dingtalk
+net-im/tencent-qq
+net-misc/reframe
 net-misc/telnet-bsd
 net-print/cups-filters
 net-print/hplip-plugin

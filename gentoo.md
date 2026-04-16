@@ -405,6 +405,19 @@ polkit.addAdminRule(function(action, subject) {
 
 ### 远程桌面
 
+* reframe 是一个国人开发的远程桌面工具，支持wayland登录，可实现无人值守远程桌面。
+* <https://github.com/AlynxZhou/reframe>
+
+  ```shell
+  # emerge -avg reframe --autounmask
+  # systemctl enable reframe-server@example
+  # systemctl start reframe-server@example
+  ```
+
+  * 配置文件：/etc/reframe/example.conf
+
+* 通用远程客户端
+
   ```shell
   # euse -p net-misc/remmina -E vnc rdp
   # emerge -avg remmina
