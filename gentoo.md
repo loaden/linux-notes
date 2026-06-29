@@ -497,6 +497,21 @@ polkit.addAdminRule(function(action, subject) {
   * 扫描
     > `# emerge -avg simple-scan`
 
+### 运行安卓应用
+
+* 安装`Waydroid`:<https://github.com/waydroid/waydroid>
+
+  ```shell
+  # sudo emerge -avg waydroid --autounmask
+  $ systemctl status waydroid-container
+  ```
+
+* 安装应用
+
+  ```shell
+  waydroid app install app.apk
+  ```
+
 ## Gentoo 技巧总结
 
 ### 紧凑模式搜索以`ibus`开头的包
