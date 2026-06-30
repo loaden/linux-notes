@@ -499,7 +499,7 @@ polkit.addAdminRule(function(action, subject) {
 
 ### 运行安卓应用
 
-* 安装`Waydroid`:<https://github.com/waydroid/waydroid>
+* 安装`Waydroid`：<https://github.com/waydroid/waydroid>
 
   ```shell
   # sudo emerge -avg waydroid --autounmask
@@ -511,6 +511,49 @@ polkit.addAdminRule(function(action, subject) {
   ```shell
   waydroid app install app.apk
   ```
+
+### 安卓模拟器
+
+* 安装`Genymotion`：<https://www.genymotion.com>
+
+  ```shell
+  # emerge -avg genymotion-bin --autounmask
+  # gpasswd -a <用户名> kvm
+  ```
+
+  * 重启电脑生效
+
+* 安装ARM支持
+  * 安卓4-安卓9
+    * <https://github.com/m9rco/Genymotion_ARM_Translation>
+  * 安卓11
+    * <https://github.com/niizam/Genymotion_A11_libhoudini>
+    * 新建安卓11模拟器
+      * 打开模拟器
+      * 安装ARM支持模块，重启
+      * 安装`Root Explorer`，通过安卓系统`设置-隐私权-权限管理器-其他权限`给予ROOT权限
+      * 用`Root Explorer`编辑`/system/build.prop`和`/system/vendor/build.prop`，在末尾加入以下内容
+
+        ```
+        ro.product.cpu.abilist=x86_64,x86,arm64-v8a,armeabi-v7a,armeabi
+        ro.product.cpu.abilist32=x86,armeabi-v7a,armeabi
+        ro.product.cpu.abilist64=x86_64,arm64-v8a
+        ro.vendor.product.cpu.abilist=x86_64,x86,arm64-v8a,armeabi-v7a,armeabi
+        ro.vendor.product.cpu.abilist32=x86,armeabi-v7a,armeabi
+        ro.vendor.product.cpu.abilist64=x86_64,arm64-v8a
+        ro.odm.product.cpu.abilist=x86_64,x86,arm64-v8a,armeabi-v7a,armeabi
+        ro.odm.product.cpu.abilist32=x86,armeabi-v7a,armeabi
+        ro.odm.product.cpu.abilist64=x86_64,arm64-v8a
+        ro.dalvik.vm.native.bridge=libhoudini.so
+        ro.enable.native.bridge.exec=1
+        ro.enable.native.bridge.exec64=1
+        ro.dalvik.vm.isa.arm=x86
+        ro.dalvik.vm.isa.arm64=x86_64
+        ro.zygote=zygote64_32
+        ```
+
+    * 重启模拟顺
+  * 安装`AIDA64`，查看CPU支持
 
 ## Gentoo 技巧总结
 
