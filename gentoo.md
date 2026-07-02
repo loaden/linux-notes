@@ -548,6 +548,13 @@ polkit.addAdminRule(function(action, subject) {
     waydroid prop set persist.waydroid.fake_wifi $package-name
     ```
 
+* 多窗口模式
+
+  ```shell
+  waydroid prop set persist.waydroid.multi_windows true
+  sudo systemctl restart waydroid-container
+  ```
+
 * 重置容器
 
   ```shell
