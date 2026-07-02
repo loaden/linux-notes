@@ -524,6 +524,16 @@ polkit.addAdminRule(function(action, subject) {
   waydroid app install app.apk
   ```
 
+* 网络问题
+  * 作为解决办法，可以禁用NFT的使用(否则网络将不可用)。
+
+    ```shell
+    sudo nano /usr/lib/waydroid/data/scripts/waydroid-net.sh
+    LXC_USE_NFT=false
+    ```
+
+    * 不大稳定
+
 ### 安卓模拟器
 
 * 安装`Genymotion`：<https://www.genymotion.com>
