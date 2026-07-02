@@ -525,14 +525,38 @@ polkit.addAdminRule(function(action, subject) {
   ```
 
 * 网络问题
-  * 作为解决办法，可以禁用NFT的使用(否则网络将不可用)。
+  * 方法一：禁用NFT
 
     ```shell
     sudo nano /usr/lib/waydroid/data/scripts/waydroid-net.sh
     LXC_USE_NFT=false
+    sudo systemctl restart waydroid-container
     ```
 
-    * 不大稳定
+  * 方法二：路由上网
+
+    ```shell
+    waydroid status
+    sudo waydroid shell ip route add default via ip_addr
+    sudo systemctl restart waydroid-container
+    ```
+
+  * 个别app无法上网
+
+    ```shell
+    waydroid app list
+    waydroid prop set persist.waydroid.fake_wifi $package-name
+    ```
+
+* 重置容器
+
+  ```shell
+  sudo systemctl stop waydroid-container
+  sudo rm -rf /var/lib/waydroid
+  sudo rm -rf ~/.local/share/waydroid
+  sudo waydroid init
+  waydroid status
+  ```
 
 ### 安卓模拟器
 
