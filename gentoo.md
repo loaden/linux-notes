@@ -506,6 +506,18 @@ polkit.addAdminRule(function(action, subject) {
   $ systemctl status waydroid-container
   ```
 
+* 安装arm兼容模块：<https://github.com/casualsnek/waydroid_script>
+
+  ```shell
+  git clone https://github.com/casualsnek/waydroid_script
+  cd waydroid_script
+  python3 -m venv venv
+  venv/bin/pip install -r requirements.txt
+  sudo venv/bin/python3 main.py
+  ```
+
+  * 选择`libhoudini`模块并安装
+
 * 安装应用
 
   ```shell
